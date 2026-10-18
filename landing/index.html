@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#000033" />
+<title>Scorched Tanks - Retro tank artillery for Android</title>
+<meta name="description" content="Turn-based tank artillery, just like 1991. Angle. Power. Wind. Boom." />
+<style>
+:root{
+  --bg:#000022; --panel:#0000aa; --panel-2:#000066;
+  --yellow:#ffff55; --cyan:#55ffff; --magenta:#ff55ff; --red:#ff5555;
+  --green:#55ff55; --white:#ffffff; --grey:#aaaaaa; --dark:#555555; --black:#000000;
+  --mono:"Courier New",Courier,"Lucida Console",Consolas,"DejaVu Sans Mono","Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--white);font:16px/1.5 var(--mono);
+  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.25) 0 1px,transparent 1px 3px);}
+a{color:var(--cyan)}
+.wrap{max-width:760px;margin:0 auto;padding:16px 14px 32px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* DOS window */
+.win{background:var(--panel);border:4px double var(--white);padding:18px 14px;margin:0 0 22px;box-shadow:8px 8px 0 var(--black)}
+.win__title{display:inline-block;margin:-32px 0 10px;padding:0 8px;background:var(--panel);color:var(--yellow);font-weight:bold;letter-spacing:1px}
+.win h2{margin:0 0 14px;font-size:20px;color:var(--yellow);text-transform:uppercase;letter-spacing:1px}
+
+/* Invite */
+.invite{background:var(--black);border:4px solid var(--magenta);padding:18px 14px;margin:0 0 22px;text-align:center;box-shadow:0 0 0 4px var(--black),0 0 0 8px var(--cyan)}
+.invite__hi{margin:0;color:var(--magenta);font-weight:bold;font-size:clamp(24px,8vw,40px);letter-spacing:2px;text-shadow:3px 3px 0 var(--panel)}
+.invite__label{margin:14px 0 0;color:var(--cyan);font-size:18px;text-transform:uppercase;letter-spacing:2px}
+.invite__code{margin:4px 0 16px;color:var(--yellow);font-weight:bold;font-size:clamp(56px,22vw,120px);line-height:1;letter-spacing:.12em;text-shadow:4px 4px 0 var(--red),8px 8px 0 var(--black)}
+.cursor{display:inline-block;width:.55em;height:.12em;background:var(--yellow);vertical-align:baseline;margin-left:.05em;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.invite .note{margin:6px 0 14px;color:var(--grey);font-size:14px}
+.invite .small{margin:16px 0 0;color:var(--grey);font-size:13px;text-align:left}
+
+/* Hero */
+.hero{text-align:center;margin:0 0 22px}
+.logo{margin:6px 0 12px;font-weight:bold;line-height:.95;font-size:clamp(40px,13vw,84px);letter-spacing:.04em;color:var(--yellow);
+  text-shadow:3px 3px 0 var(--red),6px 6px 0 var(--magenta),9px 9px 0 var(--black)}
+.logo span{display:block}
+.logo span+span{color:var(--cyan);text-shadow:3px 3px 0 var(--panel),6px 6px 0 var(--magenta),9px 9px 0 var(--black)}
+.scene{display:block;width:100%;aspect-ratio:16/9;background:var(--black);border:4px solid var(--grey);border-color:var(--white) var(--dark) var(--dark) var(--white);image-rendering:pixelated;image-rendering:crisp-edges}
+.tagline{margin:16px 0 18px;font-size:18px;color:var(--white)}
+.tagline b{color:var(--yellow)}
+
+/* Beveled buttons */
+.btns{display:grid;gap:12px}
+.btn{display:block;min-height:52px;padding:13px 12px;background:var(--grey);color:var(--black);text-decoration:none;font:bold 18px/1.3 var(--mono);text-align:center;letter-spacing:1px;
+  border:4px solid;border-color:var(--white) var(--dark) var(--dark) var(--white);box-shadow:3px 3px 0 var(--black);-webkit-tap-highlight-color:transparent}
+.btn:hover{background:#c8c8c8}
+.btn:active{border-color:var(--dark) var(--white) var(--white) var(--dark);transform:translate(2px,2px);box-shadow:1px 1px 0 var(--black)}
+.btn:focus-visible{outline:3px dashed var(--yellow);outline-offset:3px}
+.btn--yellow{background:var(--yellow);border-color:#ffffcc #aa8800 #aa8800 #ffffcc}
+.btn--yellow:hover{background:#ffff88}
+.btn--cyan{background:var(--cyan);border-color:#ccffff #008888 #008888 #ccffff}
+.btn--cyan:hover{background:#99ffff}
+.btn--yellow:active{border-color:#aa8800 #ffffcc #ffffcc #aa8800}
+.btn--cyan:active{border-color:#008888 #ccffff #ccffff #008888}
+.btn small{display:block;font-weight:normal;font-size:13px}
+
+/* Lists */
+.feat{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.feat li{padding-left:26px;position:relative}
+.feat li::before{content:"\25BA";position:absolute;left:0;color:var(--yellow)}
+.feat b{color:var(--cyan)}
+.hl{color:var(--yellow)}
+.mag{color:var(--magenta)}
+.steps{list-style:none;margin:0;padding:0;counter-reset:s;display:grid;gap:12px}
+.steps li{counter-increment:s;display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:start}
+.steps li::before{content:counter(s);display:flex;align-items:center;justify-content:center;height:36px;background:var(--black);color:var(--yellow);font-weight:bold;font-size:20px;border:2px solid var(--cyan)}
+.req{margin:16px 0 0;padding:8px 10px;background:var(--black);color:var(--red);border:2px dashed var(--red);font-weight:bold}
+.steps a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:44px;padding:0 4px;vertical-align:middle}
+kbd{font:inherit;background:var(--black);color:var(--yellow);padding:0 4px;border:1px solid var(--grey)}
+
+.foot{text-align:center;color:var(--grey);font-size:14px;padding:6px 0 0;border-top:2px dashed var(--dark)}
+.foot p{margin:10px 0}
+.ver{display:inline-block;background:var(--panel);color:var(--yellow);padding:2px 8px;border:2px solid var(--cyan)}
+
+@media (min-width:600px){
+  .wrap{padding:28px 20px 40px}
+  .btns--2{grid-template-columns:1fr 1fr}
+  .win{padding:22px 22px}
+}
+@media (prefers-reduced-motion:reduce){.cursor{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <section class="invite" id="invite" hidden aria-live="polite">
+    <p class="invite__hi">YOU'RE INVITED!</p>
+    <p class="invite__label">Room code:</p>
+    <p class="invite__code"><span id="code">ABCD</span><span class="cursor" aria-hidden="true"></span></p>
+    <div class="btns">
+      <a class="btn btn--yellow" id="openApp" href="/download">OPEN IN APP</a>
+      <div>
+        <a class="btn btn--cyan" id="playRoom" href="/play">PLAY IN BROWSER</a>
+        <p class="note">No install - works on any phone or computer</p>
+      </div>
+      <a class="btn" href="/download">DOWNLOAD THE APP</a>
+    </div>
+    <p class="small">Already installed? Tap <span class="hl">OPEN IN APP</span>. New here? Download, install, then come back and tap <span class="hl">OPEN IN APP</span> - or just play in the browser.</p>
+  </section>
+
+  <header class="hero">
+    <h1 class="logo"><span>SCORCHED</span><span>TANKS</span></h1>
+    <canvas class="scene" id="scene" width="320" height="180" role="img" aria-label="Pixel-art night scene: tanks on jagged hills firing shells that explode in fireballs"></canvas>
+    <p class="tagline">Turn-based tank artillery, just like 1991.<br /><b>Angle. Power. Wind. Boom.</b></p>
+    <div class="btns btns--2" id="heroBtns">
+      <a class="btn btn--yellow" href="/download">DOWNLOAD FOR ANDROID</a>
+      <a class="btn btn--cyan" href="/play">PLAY IN BROWSER</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="win" id="features">
+      <span class="win__title">[ FEATURES ]</span>
+      <h2>What's in the box</h2>
+      <ul class="feat">
+        <li>Up to <b>10 tanks</b> on one battlefield.</li>
+        <li><b>Online multiplayer</b> for 2-4 players: Quick Match with strangers, or private rooms with a 4-letter code.</li>
+        <li><b>7 computer opponent types</b>.</li>
+        <li><b>Dozens of classic weapons</b>: Baby Missile, Nuke, Funky Bomb, MIRV, Dirt, Napalm, Roller, Digger and more.</li>
+        <li>A <b>shop</b> between rounds.</li>
+        <li><b>Wind, gravity, walls and terrain</b> options.</li>
+        <li><b>Touch controls</b> built for phones.</li>
+      </ul>
+    </section>
+
+    <section class="win" id="install">
+      <span class="win__title">[ INSTALL ]</span>
+      <h2>How to install (Android)</h2>
+      <ol class="steps">
+        <li><span>Tap <a href="/download">Download</a>. The APK is about <span class="hl">190 KB</span>.</span></li>
+        <li><span>Open the file. If Android asks, allow <span class="hl">"Install unknown apps"</span> for your browser.</span></li>
+        <li><span>Tap <kbd>Install</kbd>, then <kbd>Open</kbd>.</span></li>
+        <li><span>Updates install over the old version, and saved games are kept.</span></li>
+      </ol>
+      <p class="req">REQUIRES ANDROID 7 OR NEWER</p>
+    </section>
+
+    <section class="win" id="online">
+      <span class="win__title">[ ONLINE ]</span>
+      <h2>How to play online</h2>
+      <ol class="steps">
+        <li><span>Tap <kbd>PLAY ONLINE</kbd>, then <kbd>QUICK MATCH</kbd> to meet strangers, or <kbd>CREATE ROOM</kbd> and share the code.</span></li>
+        <li><span>Friends <kbd>JOIN</kbd> with the code or tap your invite link.</span></li>
+        <li><span>Each player has <span class="hl">30 seconds</span> per turn.</span></li>
+        <li><span>Everyone shops at the same time between rounds.</span></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>Scorched Tanks - an unofficial fan tribute.<br /><span class="mag">Free, no ads, no tracking.</span></p>
+    <p>Current version: <span class="ver">v1.11</span></p>
+  </footer>
+</div>
+
+<script>
+(function(){
+  /* ---------- Invite mode ---------- */
+  var code = null;
+  var m = location.pathname.match(/^\/join\/([A-Za-z]{4})\/?$/);
+  if (m) code = m[1];
+  if (!code) {
+    var q = new URLSearchParams(location.search).get("room");
+    if (q && /^[A-Za-z]{4}$/.test(q.trim())) code = q.trim();
+  }
+  if (code) {
+    code = code.toUpperCase();
+    var isAndroid = /Android/i.test(navigator.userAgent);
+    var open = document.getElementById("openApp");
+    open.href = isAndroid
+      ? "intent://join/" + code + "#Intent;scheme=scorchedtanks;package=com.yishai.scorchedtanks;S.browser_fallback_url=" + encodeURIComponent(location.origin + "/download") + ";end"
+      : "scorchedtanks://join/" + code;
+    document.getElementById("playRoom").href = "/play#room=" + code;
+    document.getElementById("code").textContent = code;
+    document.getElementById("invite").hidden = false;
+    document.getElementById("heroBtns").hidden = true;
+    document.title = "Join room " + code + " - Scorched Tanks";
+  }
+
+  /* ---------- Pixel scene ---------- */
+  var cv = document.getElementById("scene"), ctx = cv.getContext("2d");
+  var W = cv.width, H = cv.height;
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var COLORS = ["#ff5555","#55ffff","#ff55ff","#55ff55","#ffff55"];
+  var stars = [], ground = [], tanks = [], shell = null, boom = null, wait = 40, shots = 0, t = 0;
+
+  for (var i = 0; i < 70; i++) stars.push({x: Math.random()*W|0, y: Math.random()*H*0.6|0, p: Math.random()*6.28, c: Math.random() < .2 ? "#55ffff" : "#ffffff"});
+
+  function newWorld(){
+    var a = 70 + Math.random()*20, ph = [Math.random()*6, Math.random()*6, Math.random()*6];
+    for (var x = 0; x < W; x++) {
+      var y = H*0.62 + Math.sin(x/38+ph[0])*18 + Math.sin(x/17+ph[1])*9 + Math.sin(x/7+ph[2])*3;
+      ground[x] = Math.round(y/2)*2; // jagged steps
+    }
+    tanks = [];
+    var n = 4, cols = COLORS.slice().sort(function(){return Math.random()-.5});
+    for (var k = 0; k < n; k++) tanks.push({x: Math.round(20 + k*(W-40)/(n-1) + (Math.random()*16-8)), c: cols[k], ang: 0});
+    shots = 0;
+  }
+  function surf(x){ x = Math.max(0, Math.min(W-1, x|0)); return ground[x]; }
+
+  function fire(){
+    var a = tanks[Math.random()*tanks.length|0], b;
+    do { b = tanks[Math.random()*tanks.length|0]; } while (b === a);
+    var sx = a.x, sy = surf(a.x) - 6, dx = b.x - sx, T = 70 + Math.random()*30, g = 0.05;
+    var miss = (Math.random()*30 - 15);
+    dx += miss;
+    var tx = sx + dx, ty = surf(tx) - 1;
+    var vx = dx/T, vy = (ty - sy - 0.5*g*T*T)/T;
+    a.ang = Math.atan2(vy, vx);
+    shell = {x: sx, y: sy, vx: vx, vy: vy, g: g, trail: [], c: a.c};
+  }
+
+  function explode(x, y){
+    boom = {x: x, y: y, r: 0, max: 10 + Math.random()*6, parts: []};
+    for (var i = 0; i < 30; i++) {
+      var an = Math.random()*6.28, sp = Math.random()*1.6 + .3;
+      boom.parts.push({x: x, y: y, vx: Math.cos(an)*sp, vy: Math.sin(an)*sp - 1, life: 30 + Math.random()*20});
+    }
+    // crater
+    var R = boom.max*0.7;
+    for (var cx = Math.floor(x-R); cx <= x+R; cx++) {
+      if (cx < 0 || cx >= W) continue;
+      var d = Math.sqrt(Math.max(0, R*R - (cx-x)*(cx-x)));
+      var bottom = Math.round((y + d)/2)*2;
+      if (ground[cx] < bottom) ground[cx] = Math.min(H-4, bottom);
+    }
+  }
+
+  function px(x, y, w, h, c){ ctx.fillStyle = c; ctx.fillRect(x|0, y|0, w, h); }
+
+  function drawTank(tk){
+    var y = surf(tk.x);
+    px(tk.x-4, y-3, 9, 3, tk.c);
+    px(tk.x-2, y-5, 5, 2, tk.c);
+    px(tk.x-4, y-1, 9, 1, "#000000");
+    var ang = tk.ang || -Math.PI/2 + (tk.x < W/2 ? 0.6 : -0.6);
+    for (var s = 1; s <= 4; s++) px(tk.x + Math.cos(ang)*s, y-5 + Math.sin(ang)*s, 1, 1, "#ffffff");
+  }
+
+  function draw(){
+    // sky
+    var grd = ctx.createLinearGradient(0,0,0,H);
+    grd.addColorStop(0,"#000011"); grd.addColorStop(1,"#220044");
+    ctx.fillStyle = grd; ctx.fillRect(0,0,W,H);
+    for (var i = 0; i < stars.length; i++) {
+      var s = stars[i];
+      if (Math.sin(t/20 + s.p) > -0.6) px(s.x, s.y, 1, 1, s.c);
+    }
+    px(W-40, 16, 10, 10, "#ffffaa"); px(W-37, 16, 7, 7, "#000011"); // moon
+    // ground
+    for (var x = 0; x < W; x++) {
+      var g = ground[x];
+      px(x, g, 1, 2, "#55ff55");
+      px(x, g+2, 1, H-g, (x + (g>>1)) % 4 ? "#00aa00" : "#008800");
+    }
+    for (var k = 0; k < tanks.length; k++) drawTank(tanks[k]);
+    // shell
+    if (shell) {
+      for (var j = 0; j < shell.trail.length; j++) px(shell.trail[j][0], shell.trail[j][1], 1, 1, j % 2 ? "#555555" : "#aaaaaa");
+      px(shell.x-1, shell.y-1, 2, 2, "#ffffff");
+    }
+    // explosion
+    if (boom) {
+      var r = boom.r;
+      var rings = ["#ffffff","#ffff55","#ff5555","#aa0000"];
+      for (var q = 3; q >= 0; q--) {
+        var rr = Math.max(0, r - q*2.5);
+        ctx.fillStyle = rings[q];
+        for (var yy = -rr; yy <= rr; yy += 2) {
+          var hw = Math.sqrt(Math.max(0, rr*rr - yy*yy));
+          ctx.fillRect(Math.round((boom.x - hw)/2)*2, Math.round((boom.y + yy)/2)*2, Math.round(hw)*2 || 0, 2);
+        }
+      }
+      for (var p = 0; p < boom.parts.length; p++) {
+        var pt = boom.parts[p];
+        if (pt.life > 0) px(pt.x, pt.y, 2, 2, pt.life > 30 ? "#ffff55" : pt.life > 15 ? "#ff5555" : "#ff55ff");
+      }
+    }
+    // wind HUD
+    ctx.fillStyle = "#ffff55"; ctx.font = "8px monospace";
+    ctx.fillText("WIND " + (((t/200)|0) % 2 ? "<<" : ">>") + " " + (5 + ((t/200)|0) % 7), 4, 10);
+  }
+
+  function step(){
+    t++;
+    if (shell) {
+      shell.trail.push([shell.x, shell.y]);
+      if (shell.trail.length > 40) shell.trail.shift();
+      shell.x += shell.vx; shell.y += shell.vy; shell.vy += shell.g;
+      if (shell.x < 0 || shell.x >= W) { shell = null; wait = 40; }
+      else if (shell.y >= surf(shell.x)) { explode(shell.x, surf(shell.x)); shell = null; }
+    } else if (boom) {
+      if (boom.r < boom.max) boom.r += 1;
+      var alive = false;
+      for (var p = 0; p < boom.parts.length; p++) {
+        var pt = boom.parts[p];
+        if (pt.life > 0) { alive = true; pt.x += pt.vx; pt.y += pt.vy; pt.vy += 0.06; pt.life--; }
+      }
+      if (boom.r >= boom.max) boom.max = 0;
+      if (!alive) { boom = null; wait = 90; if (++shots >= 6) newWorld(); }
+      else if (boom.max === 0) boom.r = Math.max(0, boom.r - 0.7);
+    } else if (--wait <= 0) fire();
+    draw();
+  }
+
+  newWorld();
+  if (reduce) {
+    fire(); for (var n = 0; n < 45; n++) { shell.trail.push([shell.x, shell.y]); shell.x += shell.vx; shell.y += shell.vy; shell.vy += shell.g; }
+    draw();
+  } else {
+    var last = 0;
+    (function loop(ts){
+      if (ts - last >= 33) { last = ts; if (!document.hidden) step(); }
+      requestAnimationFrame(loop);
+    })(0);
+  }
+})();
+</script>
+</body>
+</html>
