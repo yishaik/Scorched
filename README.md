@@ -28,5 +28,6 @@ A tribute recreation of **Scorched Earth** (1991, DOS, Wendell Hicken), playable
 - v1.9: ONLINE multiplayer (quick match, rooms with code + 'fill with strangers', turn timer, CPU takeover on disconnect, host migration, simultaneous shop). Server in server/ (Cloudflare Worker + Durable Objects).
 - v1.10: online shop before round 1.
 - v1.11: version tags + non-blocking mismatch warning, invite links (/join/CODE) with a branded landing page, play-in-browser (/play), APK download (/download), Android deep links.
+- v1.12: rotating mid-round keeps the world (uniform letterbox scaling instead of stretching); game setup (options + tank line-up) remembered between launches; online clients use the host's world size.
 
 See DEPLOY.md for live links and the release checklist.
