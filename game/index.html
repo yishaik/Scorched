@@ -1317,7 +1317,7 @@
           if (keepWorld && W > 0 && H > 0) fitView();
           else setWorld(SW, SH);
         }
-        const roundLive = () => (state === "play" || state === "over") && tanks.length > 0;
+        const roundLive = () => state === "play" && tanks.length > 0;
         function resize() {
           const keep = roundLive();
           measure(keep);
