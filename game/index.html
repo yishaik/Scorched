@@ -388,6 +388,24 @@
       .x-cont small { font-size: 12px; letter-spacing: 0; color: #ffff55; }
       .x-cont[hidden], .x-conterr[hidden] { display: none; }
       .x-panel .x-conterr { font-family: "Geist Mono", ui-monospace, monospace; color: #c00000; }
+      /* main menu: self-contained DOS look so it reads on any terrain and without hark.css */
+      #menu .x-panel {
+        background: #000080; color: #fff; border-radius: 0; border: 3px solid; border-color: #8080ff #000040 #000040 #8080ff;
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55); min-width: min(300px, 90vw); gap: 10px;
+      }
+      #menu .x-panel h1 { color: #ffff55; font-family: "Geist Mono", ui-monospace, monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.04em; text-shadow: 2px 2px 0 #000; }
+      #menu .x-panel p { color: #c0c0c0; font-family: "Geist Mono", ui-monospace, monospace; font-size: 13px; }
+      #menu .x-panel p.x-ver { color: #8080ff; }
+      #menu .x-panel > button:not(.x-cont) {
+        min-height: 52px; flex: 0 0 auto; width: 100%; padding: 0 16px; box-sizing: border-box;
+        background: #c0c0c0; color: #000; border: 3px solid; border-color: #fff #404040 #404040 #fff; border-radius: 0;
+        font-family: "Geist Mono", ui-monospace, monospace; font-size: 17px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+        -webkit-tap-highlight-color: transparent; cursor: pointer;
+      }
+      #menu .x-panel > button:not(.x-cont):active { border-color: #404040 #fff #fff #404040; background: #a8a8a8; }
+      #menu .x-panel > button:not(.x-cont):focus-visible { outline: 2px solid #ffff55; outline-offset: 2px; }
+      #menu .x-panel > #vsNet { background: #a80000; color: #fff; border-color: #ff5555 #540000 #540000 #ff5555; }
+      #menu .x-panel > #vsNet:active { border-color: #540000 #ff5555 #ff5555 #540000; background: #8a0000; }
       /* online: DOS windows for the online panel, quick match and room lobby */
       .x-net .x-gm-body { gap: 10px; }
       .x-net input {
