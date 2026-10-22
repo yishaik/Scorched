@@ -5,7 +5,7 @@ set -euo pipefail
 ACCOUNT=${CF_ACCOUNT_ID:-0f6475716c1a85bfa0a5956792e85b52}
 cd "$(dirname "$0")"
 cp ../landing/index.html landing.txt
-cp ../game/index.html game.txt
+python3 inline_assets.py ../game game.txt   # inlines hark.css/hark-hero.css/hark.js so /play matches the APK
 cp ../apk/ScorchedTanks.apk app.apk.bin
 curl -sS -X PUT "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/workers/scripts/scorched-tanks" \
   -H "Authorization: Bearer $CF_API_TOKEN" \
