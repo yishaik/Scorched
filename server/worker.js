@@ -13,7 +13,7 @@
 import LANDING from "./landing.txt";
 import GAME from "./game.txt";
 import APK from "./app.apk.bin";
-const APP_VER = "1.11";
+const APP_VER = "1.12";
 const CORS = { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,POST,OPTIONS", "Access-Control-Allow-Headers": "content-type" };
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json", ...CORS } });
 const ALPH = "ABCDEFGHJKLMNPQRSTUVWXYZ";

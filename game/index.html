@@ -388,6 +388,24 @@
       .x-cont small { font-size: 12px; letter-spacing: 0; color: #ffff55; }
       .x-cont[hidden], .x-conterr[hidden] { display: none; }
       .x-panel .x-conterr { font-family: "Geist Mono", ui-monospace, monospace; color: #c00000; }
+      /* main menu: self-contained DOS look so it reads on any terrain and without hark.css */
+      #menu .x-panel {
+        background: #000080; color: #fff; border-radius: 0; border: 3px solid; border-color: #8080ff #000040 #000040 #8080ff;
+        box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.55); min-width: min(300px, 90vw); gap: 10px;
+      }
+      #menu .x-panel h1 { color: #ffff55; font-family: "Geist Mono", ui-monospace, monospace; font-size: 26px; font-weight: 700; letter-spacing: 0.04em; text-shadow: 2px 2px 0 #000; }
+      #menu .x-panel p { color: #c0c0c0; font-family: "Geist Mono", ui-monospace, monospace; font-size: 13px; }
+      #menu .x-panel p.x-ver { color: #8080ff; }
+      #menu .x-panel > button:not(.x-cont) {
+        min-height: 52px; flex: 0 0 auto; width: 100%; padding: 0 16px; box-sizing: border-box;
+        background: #c0c0c0; color: #000; border: 3px solid; border-color: #fff #404040 #404040 #fff; border-radius: 0;
+        font-family: "Geist Mono", ui-monospace, monospace; font-size: 17px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+        -webkit-tap-highlight-color: transparent; cursor: pointer;
+      }
+      #menu .x-panel > button:not(.x-cont):active { border-color: #404040 #fff #fff #404040; background: #a8a8a8; }
+      #menu .x-panel > button:not(.x-cont):focus-visible { outline: 2px solid #ffff55; outline-offset: 2px; }
+      #menu .x-panel > #vsNet { background: #a80000; color: #fff; border-color: #ff5555 #540000 #540000 #ff5555; }
+      #menu .x-panel > #vsNet:active { border-color: #540000 #ff5555 #ff5555 #540000; background: #8a0000; }
       /* online: DOS windows for the online panel, quick match and room lobby */
       .x-net .x-gm-body { gap: 10px; }
       .x-net input {
@@ -749,7 +767,7 @@
     <script>
       // online: JSON over WebSocket to the Scorched Tanks server
       const NET_BASE = "scorched-tanks.yishai-k.workers.dev";
-      const GAME_VER = "1.11";
+      const GAME_VER = "1.12";
       (function () {
         const store = {
           get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -1045,6 +1063,52 @@
           Cyborg: { ea: 0.2, ep: 0.3 },
         };
         let slots = ["Human", "Shooter"];
+        // the local setup kept between launches in "st-setup": cfg, and the slots for each local mode.
+        // only the setup screen and a local match start write it, so an online host's cfg is never saved
+        const SETUP_KEY = "st-setup";
+        const CFG0 = Object.assign({}, cfg);
+        const SLOTS0 = { cpu: ["Human", "Shooter"], "2p": ["Human", "Human"] };
+        let savedSlots = { cpu: SLOTS0.cpu.slice(), "2p": SLOTS0["2p"].slice() };
+        function cleanSlots(a, def) {
+          if (!Array.isArray(a)) return def.slice();
+          const out = a.slice(0, 10).map((t) => (TYPES.includes(t) ? t : "Shooter"));
+          while (out.length < 2) out.push(def[out.length] || "Shooter");
+          return out;
+        }
+        function cleanCfg(c) {
+          const o = Object.assign({}, CFG0);
+          if (!c || typeof c !== "object") return o;
+          const r = Math.round(+c.rounds);
+          if (r >= 1 && r <= 10) o.rounds = r;
+          const cash = +c.cash;
+          if (cash >= 0 && cash <= 100000 && cash % 5000 === 0) o.cash = cash;
+          Object.keys(OPTS).forEach((k) => { if (OPTS[k].includes(c[k])) o[k] = c[k]; });
+          return o;
+        }
+        // reads the saved setup into cfg (and the per-mode slots); bad or missing values fall back to the defaults
+        function loadSetup() {
+          try {
+            const raw = localStorage.getItem(SETUP_KEY);
+            const d = raw ? JSON.parse(raw) : null;
+            Object.assign(cfg, cleanCfg(d && d.cfg));
+            const s = (d && d.slots) || {};
+            savedSlots = { cpu: cleanSlots(s.cpu, SLOTS0.cpu), "2p": cleanSlots(s["2p"], SLOTS0["2p"]) };
+          } catch (e) {
+            Object.assign(cfg, CFG0);
+            savedSlots = { cpu: SLOTS0.cpu.slice(), "2p": SLOTS0["2p"].slice() };
+          }
+        }
+        // m: the local mode whose slots are being set up; online never calls this
+        function saveSetup(m) {
+          if (m !== "cpu" && m !== "2p") return;
+          try {
+            savedSlots[m] = slots.slice();
+            const c = {};
+            Object.keys(CFG0).forEach((k) => (c[k] = cfg[k]));
+            localStorage.setItem(SETUP_KEY, JSON.stringify({ v: 1, cfg: c, slots: savedSlots }));
+          } catch (e) {}
+        }
+        loadSetup();
         let players = [], round = 0, hp0 = [];
         // only Baby Missiles to start; everything else is bought
         function startStock() { return WEAPONS.map((w, i) => (i === 0 ? -1 : 0)); }
@@ -1247,19 +1311,38 @@
         const tcv = document.createElement("canvas");
         let tctx = null, img = null, d32 = null, pal1 = null, pal2 = null, dirty = null;
 
-        // the world is sized to the stage between the HUD bar and the control bar
-        function measure() {
-          dpr = window.devicePixelRatio || 1;
-          W = Math.max(1, stage.clientWidth); H = Math.max(1, stage.clientHeight);
-          cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        // the world (W × H, in world units) is sized to the stage between the HUD bar and the control bar when a round starts.
+        // the stage (SW × SH, CSS pixels) can change mid-round: the world then keeps its size and is drawn scaled
+        // uniformly by VS, offset by VX/VY, with dark letterbox bars around it
+        let SW = 1, SH = 1, VS = 1, VX = 0, VY = 0;
+        function fitView() {
+          if (W === SW && H === SH) { VS = 1; VX = 0; VY = 0; return; }
+          VS = Math.min(SW / W, SH / H);
+          VX = Math.round(((SW - W * VS) / 2) * dpr) / dpr;
+          VY = Math.round(((SH - H * VS) / 2) * dpr) / dpr;
+        }
+        function setWorld(w, h) {
+          W = Math.max(1, w); H = Math.max(1, h);
           S = Math.max(0.6, Math.min(W, H) / 400);
+          fitView();
         }
+        // keepWorld: a round in progress keeps its world exactly and is letterboxed to the new stage
+        function measure(keepWorld) {
+          dpr = window.devicePixelRatio || 1;
+          SW = Math.max(1, stage.clientWidth); SH = Math.max(1, stage.clientHeight);
+          cv.width = Math.round(SW * dpr); cv.height = Math.round(SH * dpr);
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          if (keepWorld && W > 0 && H > 0) fitView();
+          else setWorld(SW, SH);
+        }
+        const roundLive = () => state === "play" && tanks.length > 0;
         function resize() {
-          measure();
-          if (state !== "play") makeTerrain();
-          else resampleTerrain();
+          const keep = roundLive();
+          measure(keep);
+          if (!keep) makeTerrain();
         }
+        // stage (CSS px, relative to the canvas) → world units
+        const toWorldX = (sx) => (sx - VX) / VS, toWorldY = (sy) => (sy - VY) / VS;
         const rgb = (r, g, b) => (0xff000000 | (b << 16) | (g << 8) | r) >>> 0;
         const ROCK = rgb(96, 70, 48);
         function allocImage() {
@@ -1317,6 +1400,8 @@
           };
         }
         function makeTerrain() {
+          // a new terrain takes the current stage size again: no letterbox bars
+          setWorld(SW, SH);
           TW = Math.ceil(W); TH = Math.ceil(H);
           mask = new Uint8Array(TW * TH);
           const p = [rnd() * 6, rnd() * 6, rnd() * 6];
@@ -1345,18 +1430,6 @@
             }
           }
           settling = false;
-          allocImage();
-        }
-        function resampleTerrain() {
-          const nW = Math.ceil(W), nH = Math.ceil(H);
-          if (nW === TW && nH === TH) return;
-          const nm = new Uint8Array(nW * nH);
-          for (let y = 0; y < nH; y++) {
-            const sy = Math.floor((y * TH) / nH) * TW;
-            for (let x = 0; x < nW; x++) nm[y * nW + x] = mask[sy + Math.floor((x * TW) / nW)];
-          }
-          tanks.forEach((t) => { t.x *= nW / TW; t.y = Math.round((t.y * nH) / TH); });
-          mask = nm; TW = nW; TH = nH;
           allocImage();
         }
         function solid(x, y) {
@@ -1430,6 +1503,7 @@
         // match flow: setup → shop → round → … → standings
         const mkPlayer = (name, color, type) => ({ name, color, type, cpu: type !== "Human", cash: cfg.cash, stock: startStock(), items: ITEMS.map(() => 0), wins: 0, kills: 0, toss: null, pid: null });
         function startMatch() {
+          saveSetup(mode);
           let humans = 0;
           const seen = {};
           players = slots.map((ty, i) => {
@@ -2402,7 +2476,19 @@
           win.hidden = false;
         }
 
+        // the world drawn through the view: scaled uniformly, centred, letterboxed in plain dark bars
         function draw() {
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+          if (state === "title" || (VS === 1 && VX === 0 && VY === 0)) return drawWorld();
+          ctx.fillStyle = "#07080c"; ctx.fillRect(0, 0, SW, SH);
+          ctx.save();
+          ctx.setTransform(dpr * VS, 0, 0, dpr * VS, dpr * VX, dpr * VY);
+          ctx.beginPath(); ctx.rect(0, 0, W, H); ctx.clip();
+          drawWorld();
+          ctx.restore();
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+        function drawWorld() {
           if (state === "title") return drawTitle();
           const skyKind = state === "menu" ? "Gradient" : rSky;
           if (skyKind === "Gradient") {
@@ -2633,7 +2719,8 @@
           itemsBox.hidden && document.getElementById("pause").hidden && win.hidden && !!tanks[turn];
         function aimAt(e) {
           const r = cv.getBoundingClientRect();
-          const fx = ((e.clientX - r.left) / r.width) * W, fy = ((e.clientY - r.top) / r.height) * H;
+          // screen → stage px → world units, through the same scale and offset the view draws with
+          const fx = toWorldX(((e.clientX - r.left) / r.width) * SW), fy = toWorldY(((e.clientY - r.top) / r.height) * SH);
           const t = tanks[turn], px = t.x, py = t.y - 7 * S;
           let a = (Math.atan2(py - fy, fx - px) * 180) / Math.PI;
           if (a < 0) a = fx >= px ? 0 : 180;
@@ -2681,6 +2768,7 @@
           if (!b) return;
           const k = b.dataset.opt, list = OPTS[k];
           cfg[k] = list[(list.indexOf(cfg[k]) + 1) % list.length];
+          saveSetup(mode);
           renderSetup();
         });
         const slotsEl = document.getElementById("slots");
@@ -2690,11 +2778,14 @@
           if (!b || slotsDrag.moved) return;
           const i = +b.dataset.slot;
           slots[i] = TYPES[(TYPES.indexOf(slots[i]) + 1) % TYPES.length];
+          saveSetup(mode);
           renderSetup();
         });
         const toSetup = (m) => {
           mode = m;
-          slots = m === "cpu" ? ["Human", "Shooter"] : ["Human", "Human"];
+          // the remembered local setup; this also drops any cfg an online host or a loaded save left in memory
+          loadSetup();
+          slots = savedSlots[m].slice();
           menu.hidden = true; slotsEl.scrollTop = 0; renderSetup(); setup.hidden = false;
         };
         setup.querySelectorAll("[data-set]").forEach((b) => {
@@ -2706,6 +2797,7 @@
             if (a === "c+") cfg.cash = Math.min(100000, cfg.cash + 5000);
             if (a === "n-" && slots.length > 2) slots.pop();
             if (a === "n+" && slots.length < 10) { slots.push("Shooter"); slotsEl.scrollTop = 1e6; }
+            saveSetup(mode);
             renderSetup();
           };
         });
@@ -2913,8 +3005,8 @@
             hud.hidden = false; controls.hidden = false; measure();
             mask = m; TW = d.TW; TH = d.TH;
             allocImage(); settling = false;
-            // a different screen size rescales the terrain and tanks, as on resize
-            resampleTerrain();
+            // the saved or host world keeps its exact size; a different screen letterboxes it instead of resampling
+            setWorld(TW, TH);
             last = performance.now();
             updateUI();
         }
@@ -3627,6 +3719,8 @@
           netReset(); rngSeed(null);
           Net.leave();
           mode = "cpu"; paused = false;
+          // back to the remembered local setup; the host's cfg is dropped, never saved
+          loadSetup();
           netRoomCode = null; netResyncWanted = false;
           [netWaitBox, pauseEl, netDlg, netDot].forEach((o) => (o.hidden = true));
           turnMsg.hidden = true; ffBtn.hidden = false;
@@ -3859,7 +3953,7 @@
         window.addEventListener("resize", resize);
         window.addEventListener("orientationchange", () => setTimeout(resize, 150));
         if (window.ResizeObserver) new ResizeObserver(() => {
-          if (stage.clientWidth !== Math.round(W) || stage.clientHeight !== Math.round(H)) resize();
+          if (stage.clientWidth !== SW || stage.clientHeight !== SH) resize();
         }).observe(stage);
         resize();
         deepLink();
