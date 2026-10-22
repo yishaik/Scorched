@@ -1,5 +1,7 @@
 # Scorched Tanks
 
+> Picking this up? Read [docs/HANDOFF.md](docs/HANDOFF.md) and [AGENTS.md](AGENTS.md) first.
+
 A tribute recreation of **Scorched Earth** (1991, DOS, Wendell Hicken), playable in the browser and on Android with touch.
 
 - `game/index.html` is the whole game: HTML5 Canvas plus WebAudio. Open it in a browser to play.
