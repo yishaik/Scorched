@@ -25,7 +25,8 @@ Scorched Tanks is a faithful recreation of Scorched Earth (1991, DOS, by Wendell
   - Each is a human or one of 7 CPU types: Moron, Shooter, Poolshark, Tosser, Chooser, Spoiler, Cyborg.
 - **Rounds and money:** rounds, cash and kills, a standings table, and a shop between rounds.
   - The shop has Buy and Sell, and inventory carries over between rounds.
-  - CPU players buy too.
+  - CPU players buy too, in the original pack sizes.
+  - Since v1.14 every price is a tenth of the original and sold one unit at a time; press and hold BUY/SELL to repeat.
 - **Weapons:**
   - Missiles: Baby Missile, Missile, Baby Nuke, Nuke.
   - Clusters: Leapfrog, Funky Bomb, MIRV, Death's Head.
@@ -48,6 +49,13 @@ Scorched Tanks is a faithful recreation of Scorched Earth (1991, DOS, by Wendell
   - Terrain: Random, Rolling, Mountains, Jagged, Flat, Cavern.
   - Gravity: Low, Normal, High.
   - Sky: Gradient, Black, Stars, Random.
+- **Maps (v1.14+):** a Map button in setup and in the online lobby opens a picker (Generated, saved maps, edit, delete, draw new).
+  - The builder: draw the ground with a finger; TREE/BUSH/WRECK tools place decor (tap again to remove); CLEAR, SMOOTH, SAVE.
+  - Stored in localStorage `st-maps` as `{n, h: 160 heights 0-100, d: [[column, type]]}`; the chosen map rides in `cfg.map`, so online guests get it.
+- **Graphics (v1.14+):** Modern (default) or Classic, in setup and in the in-game Settings; stored in `st-gfx`.
+  - Modern: a painted sky per sky option, three parallax ridges with trees and wreck silhouettes, a grass edge, textured dirt and rocks, detailed tanks, smoke from dead tanks.
+  - Decor (trees, bushes, wrecks) is visual only: random decor is derived from a hash of the terrain, so it never touches the game RNG; a blast burns what it reaches.
+  - Button labels shrink to fit their buttons (`fitButtons`).
 - **Presentation:** title screen with fireworks, and taunts when firing or dying.
   - WebAudio sound effects.
   - Pause, mute and quit.
@@ -90,5 +98,3 @@ On a normal x86 machine you can instead open `android/` in Android Studio. Copy 
 - Walls don't affect Rollers or Diggers.
 - The Cavern ceiling doesn't fall.
 - The original game's rule that max power drops with damage isn't implemented. The cap is one constant, used by both the drag and Power +.
-- Settings aren't saved between launches. localStorage was unavailable in the original web sandbox; the APK enables DOM storage, so saving could be added.
-- Rotating mid-round stretches the existing terrain rather than regenerating it.
