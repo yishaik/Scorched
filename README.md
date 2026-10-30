@@ -21,6 +21,9 @@ A tribute recreation of **Scorched Earth** (1991, DOS, Wendell Hicken), playable
 - Destructible pixel terrain.
 - Options for wind, walls, gravity, terrain and sky.
 - Touch: drag on the battlefield to aim, then press FIRE.
+- Online multiplayer: quick match, private rooms, invite links; the host edits match settings in the lobby.
+- Map builder: draw the ground with a finger, place trees, bushes and wrecks; maps work online too.
+- Modern hand-painted look (sky, parallax hills, grass, rocks, trees that burn, smoke) or the Classic look.
 
 ## Recent changes (v1.9, Oct 2026)
 - DOS-style HUD and controls with clear stat cells; Angle/Power steppers show their values.
@@ -31,5 +34,10 @@ A tribute recreation of **Scorched Earth** (1991, DOS, Wendell Hicken), playable
 - v1.10: online shop before round 1.
 - v1.11: version tags + non-blocking mismatch warning, invite links (/join/CODE) with a branded landing page, play-in-browser (/play), APK download (/download), Android deep links.
 - v1.12: rotating mid-round keeps the world (uniform letterbox scaling instead of stretching); game setup (options + tank line-up) remembered between launches; online clients use the host's world size.
+- v1.13: MATCH SETTINGS in the online lobby (host edits, guests see read-only; relayed as `cfg`).
+- v1.14: modern graphics with a Classic toggle; prices are a tenth of the original, sold one unit at a time; map builder (setup + online lobby).
+- v1.15: press-and-hold BUY/SELL repeats; trees, bushes and old wrecks on the battlefield (burnt when hit) and placeable in the map builder; wrecked-tank silhouettes in the background; button labels auto-shrink to fit.
+
+Marketing assets and store copy: `marketing/` (feature graphic 1024×500, screenshots, square promo, COPY.md). Re-render with `tools/render/` (node + node-canvas).
 
 See DEPLOY.md for live links and the release checklist.
