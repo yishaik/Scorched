@@ -490,6 +490,10 @@
       .x-map-top { display: flex; align-items: center; gap: 10px; }
       .x-map-top b { font-weight: 400; color: #ffff55; letter-spacing: 0.12em; white-space: nowrap; }
       .x-map-top input { flex: 1 1 auto; min-width: 0; min-height: 40px; padding: 4px 10px; font: inherit; font-size: 16px; color: #ffff55; background: #000; border-radius: 0; border: 2px solid; border-color: #404040 #fff #fff #404040; user-select: text; -webkit-user-select: text; }
+      .x-map-tools { display: flex; flex: 0 1 auto; gap: 4px; }
+      .x-map-tools button { min-height: 40px; min-width: 0; padding: 0 8px; font: inherit; font-size: 14px; color: #000; background: #c0c0c0; border-radius: 0; border: 2px solid; border-color: #fff #404040 #404040 #fff; }
+      .x-map-tools button.is-on { background: #ffff55; border-color: #404040 #fff #fff #404040; }
+      @media (max-width: 640px) { .x-map-top { flex-wrap: wrap; } .x-map-tools { flex: 1 1 100%; } .x-map-tools button { flex: 1 1 0; } }
       .x-map-cv { position: relative; flex: 1 1 auto; min-height: 0; border: 2px solid; border-color: #404040 #fff #fff #404040; background: #000; touch-action: none; }
       .x-map-cv canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
       .x-map-tip { position: absolute; top: 8px; left: 0; right: 0; margin: 0; text-align: center; font-size: 14px; color: #ffff55; pointer-events: none; }
@@ -680,6 +684,9 @@
           <div class="x-map-top">
             <b>MAP BUILDER</b>
             <input id="meName" maxlength="16" placeholder="Map name" aria-label="Map name" autocomplete="off">
+            <div class="x-map-tools" id="meTools" role="group" aria-label="Tool">
+              <button data-tool="draw" class="is-on" aria-pressed="true">DRAW</button><button data-tool="0" aria-pressed="false">TREE</button><button data-tool="1" aria-pressed="false">BUSH</button><button data-tool="2" aria-pressed="false">WRECK</button>
+            </div>
           </div>
           <div class="x-map-cv"><canvas id="meCv"></canvas><p class="x-map-tip" id="meTip">Draw the ground with your finger</p></div>
           <div class="x-map-bar">
@@ -830,7 +837,7 @@
     <script>
       // online: JSON over WebSocket to the Scorched Tanks server
       const NET_BASE = "scorched-tanks.yishai-k.workers.dev";
-      const GAME_VER = "1.14";
+      const GAME_VER = "1.15";
       (function () {
         const store = {
           get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -1148,7 +1155,10 @@
         function cleanMap(m) {
           if (!m || typeof m !== "object" || !Array.isArray(m.h) || m.h.length !== MAP_N) return null;
           const h = m.h.map((v) => Math.max(0, Math.min(100, Math.round(+v) || 0)));
-          return { n: String(m.n || "Map").replace(/[<>&"]/g, "").slice(0, 16) || "Map", h };
+          // d: placed decor as [column 0-159, type 0 tree / 1 bush / 2 wreck], at most 40
+          const d = (Array.isArray(m.d) ? m.d : []).filter((e) => Array.isArray(e) && e[0] >= 0 && e[0] < MAP_N && [0, 1, 2].includes(e[1]))
+            .slice(0, 40).map((e) => [Math.round(e[0]), e[1]]);
+          return { n: String(m.n || "Map").replace(/[<>&"]/g, "").slice(0, 16) || "Map", h, d };
         }
         function cleanCfg(c) {
           const o = Object.assign({}, CFG0);
@@ -1570,6 +1580,77 @@
           }
           settling = false;
           allocImage();
+          genDecor(mp ? cfg.map.d || [] : null);
+        }
+        // decor: trees, bushes and old wrecks standing on the ground. Looks only: shots pass through, a blast burns them.
+        // random decor comes from a hash of the terrain itself, so every online client gets the same set without using the game RNG
+        let decor = [];
+        const DECOR_T = ["tree", "bush", "wreck"];
+        function genDecor(placed) {
+          decor = [];
+          if (placed) {
+            placed.forEach(([i, t]) => decor.push({ x: ((i + 0.5) / MAP_N) * TW, t: DECOR_T[t], v: hsh(i, t), burnt: false }));
+            return;
+          }
+          let seed = 0;
+          for (let x = 0; x < TW; x += 7) seed = (seed * 31 + gy(x)) | 0;
+          const n = Math.round(TW / (70 * Math.max(1, S)));
+          for (let k = 0; k < n; k++) {
+            const r = hsh(seed, k), x = (0.03 + 0.94 * hsh(k, seed)) * TW;
+            if (gy(x) >= TH - 4) continue;
+            decor.push({ x, t: r < 0.5 ? "tree" : r < 0.85 ? "bush" : "wreck", v: hsh(seed + 1, k), burnt: false });
+          }
+        }
+        function burnDecor(x, y, r) {
+          decor.forEach((d) => {
+            const gy0 = gy(d.x), hgt = (d.t === "tree" ? 26 : 8) * S;
+            const dy = y < gy0 - hgt ? gy0 - hgt - y : y > gy0 ? y - gy0 : 0;
+            if (Math.abs(d.x - x) < r + 8 * S && dy < r + 6 * S) d.burnt = true;
+          });
+        }
+        function drawDecor() {
+          decor.forEach((d) => {
+            const y = gy(d.x);
+            if (y >= TH - 1) return;
+            const x = d.x, u = S * (0.85 + d.v * 0.4);
+            if (d.t === "tree") {
+              ctx.fillStyle = d.burnt ? "#1a1410" : "#5a3a20";
+              ctx.fillRect(x - 1.6 * u, y - 16 * u, 3.2 * u, 17 * u);
+              if (d.burnt) {
+                ctx.strokeStyle = "#1a1410"; ctx.lineWidth = 1.4 * u; ctx.lineCap = "round";
+                ctx.beginPath();
+                ctx.moveTo(x, y - 10 * u); ctx.lineTo(x - 6 * u, y - 17 * u);
+                ctx.moveTo(x, y - 13 * u); ctx.lineTo(x + 5 * u, y - 20 * u);
+                ctx.moveTo(x, y - 16 * u); ctx.lineTo(x - 2 * u, y - 23 * u);
+                ctx.stroke();
+                ctx.fillStyle = "#ff6a1a"; ctx.globalAlpha = 0.5 + 0.5 * Math.sin(performance.now() / 300 + d.v * 9);
+                ctx.fillRect(x - 0.8 * u, y - 9 * u, 1.6 * u, 1.6 * u); ctx.globalAlpha = 1;
+              } else {
+                const g1 = d.v < 0.5 ? "#2f6b2a" : "#3d7a2c", g2 = d.v < 0.5 ? "#4f9a3a" : "#68a83c";
+                ctx.fillStyle = g1;
+                [[0, -24, 8], [-6, -18, 6.5], [6, -18, 6.5], [0, -15, 6]].forEach(([dx, dy, r]) => { ctx.beginPath(); ctx.arc(x + dx * u, y + dy * u, r * u, 0, Math.PI * 2); ctx.fill(); });
+                ctx.fillStyle = g2;
+                [[-2, -26, 4], [-6, -20, 3], [3, -20, 3]].forEach(([dx, dy, r]) => { ctx.beginPath(); ctx.arc(x + dx * u, y + dy * u, r * u, 0, Math.PI * 2); ctx.fill(); });
+              }
+            } else if (d.t === "bush") {
+              const cs = d.burnt ? ["#1c1612", "#2c241c"] : ["#2e6a28", "#5a9c3a"];
+              [[-5, -3, 4.5, 0], [5, -3, 4.5, 0], [0, -5, 5.5, 0], [-2, -7, 2.6, 1], [3, -6, 2.4, 1]].forEach(([dx, dy, r, c]) => {
+                ctx.fillStyle = cs[c]; ctx.beginPath(); ctx.arc(x + dx * u, y + dy * u, r * u * (d.burnt ? 0.7 : 1), 0, Math.PI * 2); ctx.fill();
+              });
+            } else {
+              // a rusted wreck half sunk in the dirt, barrel snapped and drooping
+              ctx.save(); ctx.translate(x, y + 2 * u); ctx.rotate((d.v - 0.5) * 0.5); ctx.scale(1.3, 1.3);
+              ctx.fillStyle = d.burnt ? "#221a16" : "#4a3a30";
+              ctx.beginPath(); ctx.moveTo(-14 * u, 0); ctx.lineTo(-10 * u, -7 * u); ctx.lineTo(10 * u, -7 * u); ctx.lineTo(14 * u, 0); ctx.closePath(); ctx.fill();
+              ctx.fillStyle = d.burnt ? "#1a1412" : "#6a4630";
+              ctx.beginPath(); ctx.ellipse(-1 * u, -7 * u, 6 * u, 4 * u, 0, Math.PI, 0); ctx.fill();
+              ctx.strokeStyle = "#2a2220"; ctx.lineWidth = 2.4 * u; ctx.lineCap = "round";
+              ctx.beginPath(); ctx.moveTo(3 * u, -9 * u); ctx.lineTo(11 * u, -11 * u); ctx.lineTo(16 * u, -6 * u); ctx.stroke();
+              ctx.fillStyle = "#8a5a32"; ctx.globalAlpha = 0.6;
+              ctx.fillRect(-7 * u, -5 * u, 3 * u, 2 * u); ctx.fillRect(4 * u, -4 * u, 2 * u, 2 * u);
+              ctx.restore(); ctx.globalAlpha = 1;
+            }
+          });
         }
         function solid(x, y) {
           x = Math.round(x); y = Math.round(y);
@@ -2236,6 +2317,7 @@
           booms.push({ x, y, r, t: 0, dur: 0.45 + r0 / 110, pal: opt.funky ? FUNKY_COLORS : BOOM_COLORS, off: Math.floor(rnd() * 7) });
           sfx.boom(r0);
           clearCircle(x, y, r);
+          burnDecor(x, y, r);
           settleCols(x - r, x + r);
           for (const t of tanks) {
             const d = Math.hypot(t.x - x, t.y - 5 * S - y);
@@ -2632,13 +2714,28 @@
         const skyCv = document.createElement("canvas");
         let skyKey = "";
         function ridge(c, w, h, base, amp, freq, seed, col) {
+          const yAt = (x) => { const t = x / w; return base - amp * (0.55 * Math.pow(0.5 + 0.5 * Math.sin(t * freq + seed), 2) + 0.3 * (0.5 + 0.5 * Math.sin(t * freq * 2.3 + seed * 1.7)) + 0.15 * vnoise(x, seed * 100, 18)); };
           c.beginPath(); c.moveTo(0, h);
-          for (let x = 0; x <= w; x += 3) {
-            const t = x / w;
-            const y = base - amp * (0.55 * Math.pow(0.5 + 0.5 * Math.sin(t * freq + seed), 2) + 0.3 * (0.5 + 0.5 * Math.sin(t * freq * 2.3 + seed * 1.7)) + 0.15 * vnoise(x, seed * 100, 18));
-            c.lineTo(x, y);
-          }
+          for (let x = 0; x <= w; x += 3) c.lineTo(x, yAt(x));
           c.lineTo(w, h); c.closePath(); c.fillStyle = col; c.fill();
+          return yAt;
+        }
+        // far silhouettes on a ridge: pines, round trees and old wrecked tanks with broken barrels
+        function ridgeProps(c, w, yAt, sc, col, seed, wrecks) {
+          c.fillStyle = col; c.strokeStyle = col; c.lineCap = "round";
+          for (let x = 6; x < w; x += 9 * sc + hsh(x, seed) * 30 * sc) {
+            const y = yAt(x) + 1, r = hsh(seed, x);
+            if (r < 0.45) { c.beginPath(); c.moveTo(x - 3 * sc, y); c.lineTo(x, y - (9 + r * 10) * sc); c.lineTo(x + 3 * sc, y); c.fill(); }
+            else if (r < 0.6) { c.beginPath(); c.arc(x, y - 5 * sc, 4 * sc, 0, Math.PI * 2); c.fill(); c.fillRect(x - 0.6 * sc, y - 3 * sc, 1.2 * sc, 3 * sc); }
+          }
+          for (let k = 0; k < wrecks; k++) {
+            const x = (0.12 + 0.76 * hsh(k, seed + 3)) * w, y = yAt(x) + 1.5 * sc, tilt = (hsh(k, seed + 4) - 0.5) * 0.5;
+            c.save(); c.translate(x, y); c.rotate(tilt);
+            c.beginPath(); c.moveTo(-9 * sc, 0); c.lineTo(-6 * sc, -4.5 * sc); c.lineTo(6 * sc, -4.5 * sc); c.lineTo(9 * sc, 0); c.fill();
+            c.beginPath(); c.ellipse(0, -4.5 * sc, 4 * sc, 2.8 * sc, 0, Math.PI, 0); c.fill();
+            c.lineWidth = 1.4 * sc; c.beginPath(); c.moveTo(2 * sc, -6 * sc); c.lineTo(7 * sc, -7 * sc); c.lineTo(10 * sc, -3 * sc); c.stroke();
+            c.restore();
+          }
         }
         function paintSky(kind) {
           const key = `${W}x${H}:${kind}:${dpr}`;
@@ -2679,9 +2776,12 @@
           }
           // hazy hills, far to near
           const hills = night ? ["#151a3c", "#10142e", "#0b0e22"] : dark ? ["#16121c", "#110e16", "#0c0a10"] : ["#8a5a8e", "#5c3e78", "#3a2a5a"];
+          const sc = Math.max(0.7, Math.min(w, h) / 400);
           ridge(c, w, h, h * 0.62, h * 0.22, 7, 1.3, hills[0]);
-          ridge(c, w, h, h * 0.72, h * 0.16, 11, 4.1, hills[1]);
-          ridge(c, w, h, h * 0.82, h * 0.12, 17, 2.7, hills[2]);
+          const y2 = ridge(c, w, h, h * 0.72, h * 0.16, 11, 4.1, hills[1]);
+          ridgeProps(c, w, y2, sc, hills[1], 11, 1);
+          const y3 = ridge(c, w, h, h * 0.82, h * 0.12, 17, 2.7, hills[2]);
+          ridgeProps(c, w, y3, sc * 1.5, hills[2], 23, 2);
           if (!dark && !night) {
             // a little mist at the horizon line
             const m = c.createLinearGradient(0, h * 0.6, 0, h);
@@ -2752,6 +2852,7 @@
           renderTerrain();
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(tcv, 0, 0, TW, TH);
+          if (gfx === "modern") drawDecor();
           if (state === "menu") return;
           // tanks
           tanks.forEach((t, i) => {
@@ -3093,7 +3194,33 @@
           const d = dragScroll(o);
           o.addEventListener("click", (e) => { if (d.moved) { e.stopPropagation(); e.preventDefault(); d.moved = false; } }, true);
         });
+        // press and hold BUY or SELL to repeat, faster the longer it is held; the release click is then swallowed
+        let shopHoldT = null, shopHoldFired = false;
+        function shopAct(d) {
+          if (d.buy !== undefined) buy(shopP, +d.buy);
+          if (d.sell !== undefined) sell(shopP, +d.sell);
+          if (d.ibuy !== undefined) buyItem(shopP, +d.ibuy);
+          if (d.isell !== undefined) sellItem(shopP, +d.isell);
+        }
+        function shopHoldStop() { clearTimeout(shopHoldT); shopHoldT = null; }
+        shopList.addEventListener("pointerdown", (e) => {
+          const b = e.target.closest("[data-buy],[data-sell],[data-ibuy],[data-isell]");
+          if (!b || b.disabled || !shopP) return;
+          const d = Object.assign({}, b.dataset);
+          shopHoldFired = false; shopHoldStop();
+          let n = 0;
+          const tick = () => {
+            if (shopDrag.moved || !shopP) return shopHoldStop();
+            const before = shopP.cash;
+            shopAct(d); n++; shopHoldFired = true; renderShop();
+            if (shopP.cash === before) return shopHoldStop();
+            shopHoldT = setTimeout(tick, Math.max(35, 150 - n * 10));
+          };
+          shopHoldT = setTimeout(tick, 380);
+        });
+        ["pointerup", "pointercancel", "pointerleave"].forEach((ev) => shopList.addEventListener(ev, shopHoldStop));
         shopList.addEventListener("click", (e) => {
+          if (shopHoldFired) { shopHoldFired = false; e.stopPropagation(); return; }
           const b = e.target.closest("button");
           if (!b || shopDrag.moved || !shopP) return;
           const d = b.dataset;
@@ -3257,6 +3384,7 @@
             hud.hidden = false; controls.hidden = false; measure();
             mask = m; TW = d.TW; TH = d.TH;
             allocImage(); settling = false;
+            genDecor(cfg.map ? cfg.map.d || [] : null);
             // the saved or host world keeps its exact size; a different screen letterboxes it instead of resampling
             setWorld(TW, TH);
             last = performance.now();
@@ -3569,7 +3697,7 @@
         function mapsLoad() { try { const a = JSON.parse(localStorage.getItem(MAPS_KEY) || "[]"); return Array.isArray(a) ? a.map(cleanMap).filter(Boolean) : []; } catch (e) { return []; } }
         function mapsSave(a) { try { localStorage.setItem(MAPS_KEY, JSON.stringify(a.slice(0, 30))); return true; } catch (e) { return false; } }
         // draws heights as ground on a small canvas
-        function mapDraw(cv, h, big) {
+        function mapDraw(cv, h, big, dec) {
           const w = cv.width, hh = cv.height, c = cv.getContext("2d");
           const g = c.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, "#1a1240"); g.addColorStop(1, "#c8603a");
           c.fillStyle = g; c.fillRect(0, 0, w, hh);
@@ -3580,6 +3708,14 @@
           c.lineTo(w, hh); c.closePath();
           c.fillStyle = "#6b4a2b"; c.fill();
           c.lineWidth = big ? 4 : 2; c.strokeStyle = "#6fbf3a"; c.stroke();
+          // decor markers: a tree, a bush, a wreck
+          const u = big ? Math.max(1.5, hh / 160) : 0.6;
+          (dec || []).forEach(([i, t]) => {
+            const x = ((i + 0.5) / MAP_N) * w, y = top(h[i]);
+            if (t === 0) { c.fillStyle = "#5a3a20"; c.fillRect(x - 1.5 * u, y - 12 * u, 3 * u, 12 * u); c.fillStyle = "#3d8a2c"; c.beginPath(); c.arc(x, y - 16 * u, 7 * u, 0, Math.PI * 2); c.fill(); }
+            else if (t === 1) { c.fillStyle = "#3d8a2c"; c.beginPath(); c.arc(x - 3 * u, y - 3 * u, 4 * u, 0, Math.PI * 2); c.arc(x + 3 * u, y - 3 * u, 4 * u, 0, Math.PI * 2); c.arc(x, y - 6 * u, 4.5 * u, 0, Math.PI * 2); c.fill(); }
+            else { c.fillStyle = "#4a3a30"; c.fillRect(x - 9 * u, y - 5 * u, 18 * u, 5 * u); c.beginPath(); c.arc(x, y - 5 * u, 4 * u, Math.PI, 0); c.fill(); c.strokeStyle = "#2a2220"; c.lineWidth = 2 * u; c.beginPath(); c.moveTo(x + 2 * u, y - 7 * u); c.lineTo(x + 9 * u, y - 9 * u); c.lineTo(x + 12 * u, y - 4 * u); c.stroke(); }
+          });
         }
         let mapPickCb = null;
         function openMapPick(cb) { mapPickCb = cb; renderMapPick(); byId("mapPick").hidden = false; byId("mpClose").focus({ preventScroll: true }); }
@@ -3590,7 +3726,7 @@
           box.innerHTML = `<li><button class="x-map-use${cur ? "" : " is-on"}" data-mp="-1"><span>${cur ? "" : "► "}Generated (uses Terrain)</span></button></li>` +
             list.map((m, i) => `<li><button class="x-map-use${same(m) ? " is-on" : ""}" data-mp="${i}"><canvas width="192" height="80" data-mpc="${i}"></canvas><span>${same(m) ? "► " : ""}${escHtml(m.n)}</span></button>` +
               `<button class="x-map-edit" data-mpe="${i}" aria-label="Edit ${escHtml(m.n)}">EDIT</button><button class="x-map-del" data-mpd="${i}" aria-label="Delete ${escHtml(m.n)}">✕</button></li>`).join("");
-          box.querySelectorAll("[data-mpc]").forEach((cv) => mapDraw(cv, list[+cv.dataset.mpc].h));
+          box.querySelectorAll("[data-mpc]").forEach((cv) => mapDraw(cv, list[+cv.dataset.mpc].h, false, list[+cv.dataset.mpc].d));
         }
         byId("mpList").addEventListener("click", (e) => {
           const list = mapsLoad();
@@ -3603,12 +3739,20 @@
         byId("mpNew").onclick = () => openMapEd(null, -1);
         // the builder: drag a finger to set the ground height under it; strokes join up so fast swipes leave no gaps
         const meCv = byId("meCv");
-        let meH = null, meIdx = -1, meLast = null;
+        let meH = null, meD = [], meIdx = -1, meLast = null, meTool = "draw";
+        function meSetTool(t) {
+          meTool = t;
+          byId("meTools").querySelectorAll("button").forEach((b) => { const on = b.dataset.tool === t; b.classList.toggle("is-on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
+          byId("meTip").textContent = t === "draw" ? "Draw the ground with your finger" : "Tap to place, tap one again to remove";
+        }
+        byId("meTools").addEventListener("click", (e) => { const b = e.target.closest("[data-tool]"); if (b) { meSetTool(b.dataset.tool); byId("meTip").hidden = false; } });
         function meSize() { const r = meCv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1); meCv.width = Math.max(1, Math.round(r.width * d)); meCv.height = Math.max(1, Math.round(r.height * d)); meRender(); }
-        function meRender() { if (meH) mapDraw(meCv, meH, true); }
+        function meRender() { if (meH) mapDraw(meCv, meH, true, meD); }
         function openMapEd(m, idx) {
           meIdx = idx;
           meH = m ? m.h.slice() : Array.from({ length: MAP_N }, (_, i) => Math.round(30 + 12 * Math.sin(i / 14)));
+          meD = m && m.d ? m.d.map((e) => e.slice()) : [];
+          meSetTool("draw");
           byId("meName").value = m ? m.n : `Map ${mapsLoad().length + 1}`;
           byId("meTip").hidden = false;
           byId("mapEd").hidden = false;
@@ -3627,15 +3771,23 @@
           }
           meLast = p; meRender();
         }
-        meCv.addEventListener("pointerdown", (e) => { e.preventDefault(); meCv.setPointerCapture(e.pointerId); byId("meTip").hidden = true; meLast = null; mePaint(mePoint(e)); });
+        meCv.addEventListener("pointerdown", (e) => {
+          e.preventDefault(); byId("meTip").hidden = true;
+          if (meTool !== "draw") {
+            const i = Math.round(mePoint(e)[0]), near = meD.findIndex((d) => Math.abs(d[0] - i) <= 3);
+            if (near >= 0) meD.splice(near, 1); else if (meD.length < 40) meD.push([i, +meTool]);
+            meRender(); return;
+          }
+          meCv.setPointerCapture(e.pointerId); meLast = null; mePaint(mePoint(e));
+        });
         meCv.addEventListener("pointermove", (e) => { if (meLast) mePaint(mePoint(e)); });
         ["pointerup", "pointercancel", "lostpointercapture"].forEach((ev) => meCv.addEventListener(ev, () => (meLast = null)));
         window.addEventListener("resize", () => { if (!byId("mapEd").hidden) requestAnimationFrame(meSize); });
-        byId("meFlat").onclick = () => { meH = meH.map(() => 25); meRender(); };
+        byId("meFlat").onclick = () => { meH = meH.map(() => 25); meD = []; meRender(); };
         byId("meSmooth").onclick = () => { meH = meH.map((v, i) => Math.round(((meH[i - 1] ?? v) + v * 2 + (meH[i + 1] ?? v)) / 4)); meRender(); };
         byId("meCancel").onclick = () => { byId("mapEd").hidden = true; };
         byId("meSave").onclick = () => {
-          const m = cleanMap({ n: byId("meName").value.trim() || "Map", h: meH });
+          const m = cleanMap({ n: byId("meName").value.trim() || "Map", h: meH, d: meD });
           const list = mapsLoad();
           if (meIdx >= 0 && meIdx < list.length) list[meIdx] = m; else list.unshift(m);
           if (!mapsSave(list)) { dosAlert("Could not save the map."); return; }
@@ -3643,6 +3795,22 @@
           renderMapPick();
           netToast(`Map "${m.n}" saved`);
         };
+        // button labels shrink to fit their button, so no label is ever clipped on a small screen.
+        // runs after any change to the page (debounced to one pass a frame) and on resize
+        let fitQueued = false;
+        function fitButtons() {
+          fitQueued = false;
+          document.querySelectorAll("button").forEach((b) => {
+            if (b.offsetParent === null || !b.textContent.trim()) return;
+            if (b.style.fontSize) b.style.fontSize = "";
+            let fs = parseFloat(getComputedStyle(b).fontSize) || 14, n = 0;
+            while (b.scrollWidth > b.clientWidth + 1 && fs > 8 && n++ < 14) { fs -= 1; b.style.fontSize = fs + "px"; }
+          });
+        }
+        function queueFit() { if (!fitQueued) { fitQueued = true; requestAnimationFrame(fitButtons); } }
+        new MutationObserver(queueFit).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["hidden", "class", "disabled"] });
+        window.addEventListener("resize", queueFit);
+        queueFit();
         // versions: a roster entry without ver is an old client; never blocks play
         const verOf = (p) => (p && p.pid === Net.pid ? GAME_VER : p && typeof p.ver === "string" && p.ver ? p.ver : "old");
         const verDiff = (p) => verOf(p) !== GAME_VER;
