@@ -477,6 +477,21 @@
       .x-net-mix a { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; color: #ffff55; font-weight: 700; letter-spacing: 0.08em; }
       #menu .x-panel { position: relative; }
       .x-ver { position: absolute; top: 10px; right: 14px; font-size: 12px !important; opacity: 0.75; }
+      /* lobby match settings: the host edits, everyone else sees them */
+      .x-net-cfg { background: #000; color: #fff; border: 2px solid; border-color: #404040 #fff #fff #404040; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+      .x-net-cfg-t { margin: 0; font: inherit; font-size: 13px; letter-spacing: 0.12em; color: #ffff55; text-align: left; }
+      .x-net-cfg-t small { font-size: 12px; letter-spacing: 0.04em; color: #9a9ab8; }
+      .x-net-cfg-g { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .x-net-cfg-g .x-ncs { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; }
+      .x-net-cfg-g .x-ncs > span { flex: 1 1 auto; text-align: left; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #9a9ab8; }
+      .x-net-cfg-g .x-ncs > b { flex: 0 0 auto; min-width: 84px; text-align: center; font-size: 17px; color: #fff; font-weight: 400; }
+      .x-gm .x-net-cfg-g button { min-height: 44px; padding: 2px 6px; font-size: 15px; letter-spacing: 0.02em; }
+      .x-gm .x-net-cfg-g .x-ncs button { flex: 0 0 48px; font-size: 22px; line-height: 1; }
+      .x-gm .x-net-cfg-g .x-nco { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; text-align: left; }
+      .x-net-cfg-g .x-nco small { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #303030; }
+      .x-net-cfg-g div.x-nco { min-height: 40px; padding: 2px 8px; border: 1px solid #303048; color: #fff; display: flex; flex-direction: column; justify-content: center; text-align: left; font-size: 15px; }
+      .x-net-cfg-g div.x-nco small { color: #9a9ab8; }
+      .x-net-cfg-w { grid-column: 1 / -1; margin: 0; font-size: 14px; color: #9a9ab8; text-align: center; }
       .x-net-list li.is-off { color: #7a7a7a; }
       .x-net-list li.is-off .x-net-sw { opacity: 0.35; border-color: #7a7a7a; }
       .x-net-list li.is-off .x-net-badge { background: #7a7a7a; }
@@ -607,6 +622,10 @@
               <h2 class="x-net-room" id="nlRoom">ROOM <b id="nlCode">----</b></h2>
               <button id="nlShare">SHARE</button>
               <ul class="x-net-list" id="nlList" aria-label="Players"></ul>
+              <section class="x-net-cfg" aria-labelledby="nlCfgT">
+                <h3 class="x-net-cfg-t" id="nlCfgT">MATCH SETTINGS <small id="nlCfgWho"></small></h3>
+                <div class="x-net-cfg-g" id="nlCfg"></div>
+              </section>
               <p class="x-net-q x-net-hot x-net-mix" id="nlMix" role="status" hidden><span>Some players have a different version - the game may go out of sync.</span><a href="https://scorched-tanks.yishai-k.workers.dev/" target="_blank" rel="noopener">UPDATE</a></p>
               <button class="x-net-tog" id="nlPub" role="switch" aria-checked="false" hidden><i id="nlPubBox">[ ]</i>Fill empty seats with strangers</button>
               <button class="x-net-start" id="nlStart" hidden disabled>START GAME</button>
@@ -767,7 +786,7 @@
     <script>
       // online: JSON over WebSocket to the Scorched Tanks server
       const NET_BASE = "scorched-tanks.yishai-k.workers.dev";
-      const GAME_VER = "1.12";
+      const GAME_VER = "1.13";
       (function () {
         const store = {
           get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -3227,6 +3246,7 @@
         // room lobby
         function enterLobby(code) {
           stopCountdown();
+          netLobbyCfg = null; netCfgInit = false;
           byId("nlCode").textContent = code || "----";
           netShow("lobby");
           renderLobby();
@@ -3237,6 +3257,7 @@
           if (!r) {
             nlList.innerHTML = `<li class="is-empty"><span class="x-net-nm">Connecting…</span></li>`;
             [nlPub, nlStart, byId("nlNeed"), byId("nlWait")].forEach((o) => (o.hidden = true));
+            renderLobbyCfg(false);
             return;
           }
           const host = r.host === me;
@@ -3260,7 +3281,52 @@
           byId("nlNeed").hidden = !host || live >= 2;
           byId("nlWait").hidden = host;
           byId("nlMix").hidden = !mixedVersions(ps);
+          if (host) netCfgHostInit();
+          renderLobbyCfg(host);
         }
+        // lobby match settings. The host edits cfg here and relays it ({k:"cfg"}) on every change and roster update;
+        // guests only show it, and take it for real from the begin message as before. Kept in "st-online-cfg",
+        // apart from the local setup in "st-setup".
+        const NET_CFG_KEY = "st-online-cfg";
+        let netLobbyCfg = null, netCfgInit = false;
+        function netCfgSaved() { try { const r = localStorage.getItem(NET_CFG_KEY); return r ? cleanCfg(JSON.parse(r)) : null; } catch (e) { return null; } }
+        function netCfgStore() { try { const c = {}; Object.keys(CFG0).forEach((k) => (c[k] = cfg[k])); localStorage.setItem(NET_CFG_KEY, JSON.stringify(c)); } catch (e) {} }
+        function netCfgSend() { if (Net.isHost() && netView === "lobby") Net.send({ k: "cfg", cfg: cleanCfg(cfg) }); }
+        // the host's cfg: what this room last showed (after a host change), else this device's last online setup, else its local setup
+        function netCfgHostInit() {
+          if (netCfgInit) return;
+          netCfgInit = true;
+          Object.assign(cfg, netLobbyCfg || netCfgSaved() || cleanCfg(cfg));
+          netCfgSend();
+        }
+        function renderLobbyCfg(host) {
+          const box = byId("nlCfg");
+          byId("nlCfgWho").textContent = host ? "· you set them" : "· set by the host";
+          const c = host ? cfg : netLobbyCfg;
+          if (!c) { box.innerHTML = `<p class="x-net-cfg-w">Waiting for the host's settings…</p>`; return; }
+          const step = (lab, val, a, b, nm) => host
+            ? `<div class="x-ncs"><span>${lab}</span><button data-ncs="${a}" aria-label="Less ${nm}">−</button><b>${val}</b><button data-ncs="${b}" aria-label="More ${nm}">+</button></div>`
+            : `<div class="x-ncs"><span>${lab}</span><b>${val}</b></div>`;
+          box.innerHTML = step("Rounds", c.rounds, "r-", "r+", "rounds") + step("Starting cash", money(c.cash), "c-", "c+", "cash") +
+            Object.keys(OPTS).map((k) => host
+              ? `<button class="x-nco" data-nco="${k}" aria-label="${OPT_NAMES[k]}: ${c[k]}"><small>${OPT_NAMES[k]}</small>${c[k]}</button>`
+              : `<div class="x-nco"><small>${OPT_NAMES[k]}</small>${escHtml(c[k])}</div>`).join("");
+        }
+        byId("nlCfg").addEventListener("click", (e) => {
+          if (!Net.isHost() || netView !== "lobby") return;
+          const s = e.target.closest("[data-ncs]"), o = e.target.closest("[data-nco]");
+          if (s) {
+            const a = s.dataset.ncs;
+            if (a === "r-") cfg.rounds = Math.max(1, cfg.rounds - 1);
+            if (a === "r+") cfg.rounds = Math.min(10, cfg.rounds + 1);
+            if (a === "c-") cfg.cash = Math.max(0, cfg.cash - 5000);
+            if (a === "c+") cfg.cash = Math.min(100000, cfg.cash + 5000);
+          } else if (o) {
+            const k = o.dataset.nco, list = OPTS[k];
+            cfg[k] = list[(list.indexOf(cfg[k]) + 1) % list.length];
+          } else return;
+          netCfgStore(); netCfgSend(); renderLobby();
+        });
         // versions: a roster entry without ver is an old client; never blocks play
         const verOf = (p) => (p && p.pid === Net.pid ? GAME_VER : p && typeof p.ver === "string" && p.ver ? p.ver : "old");
         const verDiff = (p) => verOf(p) !== GAME_VER;
@@ -3798,7 +3864,7 @@
         Net.onQueue = (n, s) => { nqCount.textContent = `${n | 0} in queue`; countdown(s); };
         Net.onMatched = (code) => enterLobby(code);
         Net.onRoster = (r) => {
-          if (netView === "lobby") renderLobby();
+          if (netView === "lobby") { renderLobby(); netCfgSend(); }
           if (mode !== "online") return;
           netRosterCheck(r);
           if (netShopOn) { if (netShopSent) netShopWaitShow(); netShopCheck(); }
@@ -3813,6 +3879,10 @@
         Net.onMsg = (d, from) => {
           if (!d) return;
           if (d.k === "begin") return beginOnline(Object.assign({}, d, { from }));
+          if (d.k === "cfg") {
+            if (mode !== "online" && from === Net.host && from !== Net.pid) { netLobbyCfg = cleanCfg(d.cfg); if (netView === "lobby") renderLobby(); }
+            return;
+          }
           // the server tells the host a player rejoined: send them the match
           if (from === "server") { if (d.k === "rejoin" && d.pid) netSendState(String(d.pid)); return; }
           if (mode !== "online" || from === Net.pid) return;
