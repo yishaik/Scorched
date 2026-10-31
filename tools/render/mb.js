@@ -1,7 +1,10 @@
-const fs=require('fs');const {createCanvas}=require('/workspace/work/cv/node_modules/canvas');
-const src=fs.readFileSync('/workspace/built/sites/bee5e85c-6b52-4a9a-ad9a-b052f91b2ca7/index.html','utf8');
-function grab(name){const i=src.indexOf('function '+name+'(');let d=0,j=src.indexOf('{',i);for(let k=j;;k++){if(src[k]=='{')d++;else if(src[k]=='}'){d--;if(!d)return src.slice(i,k+1);}}}
-const MAP_N=160; eval(grab('mapDraw'));
+// Renders the map-builder store screenshot into <out> (argv[2], $RENDER_OUT, or marketing/).
+'use strict';
+const fs=require('fs');const path=require('path');const {createCanvas}=require('canvas');
+const {gameSource,grab:grabFrom,outDir,seedRandom}=require('./lib');
+seedRandom();
+const src=gameSource();const grab=(name)=>grabFrom(src,name);
+const MAP_N=160; const mapDraw=eval('('+grab('mapDraw')+')');
 const W=1920,H=1080,cv=createCanvas(W,H),c=cv.getContext('2d');
 c.fillStyle='#000';c.fillRect(0,0,W,H);
 // DOS-style top bar
@@ -15,4 +18,4 @@ const m=createCanvas(W-60,H-250); mapDraw(m,h,true,[[12,0],[25,1],[70,2],[84,0],
 c.strokeStyle='rgba(255,255,255,.7)';c.lineWidth=10;c.lineCap='round';c.beginPath();c.moveTo(1500,700);c.quadraticCurveTo(1620,560,1760,640);c.stroke();
 c.fillStyle='rgba(255,255,255,.85)';c.beginPath();c.arc(1760,640,26,0,7);c.fill();
 [['CLEAR',0],['SMOOTH',0],['SAVE',1],['BACK',0]].forEach(([t,on],i)=>btn(30+i*300,H-100,270,76,t,on));
-fs.writeFileSync('/workspace/work/mk/screenshot-3-map-builder.png',cv.toBuffer('image/png'));
+const out=path.join(outDir(),'screenshot-3-map-builder.png');fs.writeFileSync(out,cv.toBuffer('image/png'));console.log('wrote',out);
