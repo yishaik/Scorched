@@ -1,14 +1,41 @@
 plugins { id 'com.android.application' }
+
+// Release signing comes only from the environment (never the debug key). Without these variables
+// assembleRelease produces an unsigned APK. See docs/RELEASE-SAFETY.md.
+def ksPath = System.getenv('SCORCHED_KEYSTORE')
+def ksPass = System.getenv('SCORCHED_KEYSTORE_PASSWORD')
+def hasReleaseKey = ksPath && ksPass && file(ksPath).exists()
+
 android {
   namespace 'com.yishai.scorchedtanks'
-  compileSdk 34
+  compileSdk 36
   defaultConfig {
     applicationId 'com.yishai.scorchedtanks'
     minSdk 24
-    targetSdk 34
-    versionCode 1
-    versionName '1.0'
+    // Google Play requires targetSdk 36 for new apps and updates since 31 Aug 2026.
+    // The manual build.sh path still produces targetSdk 28 for the sideloaded APK.
+    targetSdk 36
+    // Keep in step with GAME_VER (game/index.html) and APP_VER (server/worker.js); tests/node checks it.
+    versionCode 15
+    versionName '1.15'
   }
-  buildTypes { release { minifyEnabled false; signingConfig signingConfigs.debug } }
+  // Single source of truth for the game: package ../../game (the same files build.sh uses).
+  sourceSets { main { assets.srcDirs = ['../../game'] } }
+  signingConfigs {
+    if (hasReleaseKey) {
+      release {
+        storeFile file(ksPath)
+        storePassword ksPass
+        keyAlias System.getenv('SCORCHED_KEY_ALIAS') ?: 'st'
+        keyPassword System.getenv('SCORCHED_KEY_PASSWORD') ?: ksPass
+      }
+    }
+  }
+  buildTypes {
+    release {
+      minifyEnabled false
+      signingConfig hasReleaseKey ? signingConfigs.release : null
+    }
+  }
   compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }
