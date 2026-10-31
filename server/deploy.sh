@@ -53,7 +53,7 @@ else
   echo 'deploy: note: aapt not found, APK versionName check skipped' >&2
 fi
 if [[ -n "${APKSIGNER_JAR:-}" ]]; then
-  fp="$(java -jar "$APKSIGNER_JAR" verify --print-certs ../apk/ScorchedTanks.apk | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n1)"
+  fp="$(java -jar "$APKSIGNER_JAR" verify --print-certs ../apk/ScorchedTanks.apk | sed -n 's/.*certificate SHA-256 digest: //p' | head -n1)"
   [[ "$fp" == "$EXPECTED_CERT_SHA256" ]] || die 2 "APK signer $fp is not the production signer"
 fi
 
