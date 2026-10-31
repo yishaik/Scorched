@@ -1,3 +1,4 @@
 *.jks
 out/
 apk/*.idsig
+.android-build/
