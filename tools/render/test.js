@@ -1,26 +1,31 @@
-const fs=require('fs');
-const src=fs.readFileSync('/workspace/built/sites/bee5e85c-6b52-4a9a-ad9a-b052f91b2ca7/index.html','utf8');
-function grab(name){const i=src.indexOf('function '+name+'(');let d=0,j=src.indexOf('{',i);for(let k=j;;k++){if(src[k]=='{')d++;else if(src[k]=='}'){d--;if(!d)return src.slice(i,k+1);}}}
-const hshLine=src.match(/const hsh = .*\n/)[0];
-const code=`
-const {createCanvas}=require('/workspace/work/cv/node_modules/canvas'); const fs=require('fs');
+// Builds .cache/gen.js: a scene renderer assembled from the game's own drawing functions
+// (sky, terrain, decor, tanks, smoke). Run directly to render a sample to <out>/g.png.
+'use strict';
+const fs = require('fs');
+const path = require('path');
+const { gameSource, grab, outDir, seedRandom } = require('./lib');
+
+const src = gameSource();
+const hshMatch = src.match(/const hsh = .*\n/);
+if (!hshMatch) throw new Error('const hsh not found in game/index.html');
+const code = `
+const {createCanvas}=require('canvas'); const fs=require('fs');
 const rgb = (r, g, b) => (0xff000000 | (b << 16) | (g << 8) | r) >>> 0;
-${hshLine}
-global.performance={now:()=>1234};
+${hshMatch[0]}
 module.exports=(kind,out,W=900,H=420,shots)=>{
 let S=Math.max(0.6,Math.min(W,H)/400),dpr=2,TW=W,TH=H,wind=5,mask,decor=[];
 const gy=x=>{x=Math.round(x);for(let y=0;y<TH;y++)if(mask[y*TW+x])return y;return TH};
 let stars=Array.from({length:120},(_, i)=>[(i*0.618)%1,(i*0.377)%1,1,0.5]);
 const skyCv=createCanvas(1,1); let skyKey="";
 const cv=createCanvas(W*2,H*2); const ctx=cv.getContext('2d'); ctx.setTransform(2,0,0,2,0,0);
-${grab('vnoise')}
-${grab('modernPx')}
-${grab('ridge')}
-${grab('ridgeProps')}
-${grab('paintSky')}
-${grab('drawDecor')}
-${grab('drawTankModern')}
-${grab('drawSmoke')}
+${grab(src, 'vnoise')}
+${grab(src, 'modernPx')}
+${grab(src, 'ridge')}
+${grab(src, 'ridgeProps')}
+${grab(src, 'paintSky')}
+${grab(src, 'drawDecor')}
+${grab(src, 'drawTankModern')}
+${grab(src, 'drawSmoke')}
 const muzzle=(t)=>({x:t.x+Math.cos(t.angle*Math.PI/180)*20*S,y:t.y-8*S-Math.sin(t.angle*Math.PI/180)*20*S});
 paintSky(kind); ctx.drawImage(skyCv,0,0,W,H);
 mask=new Uint8Array(TW*TH);
@@ -35,5 +40,15 @@ decor=[{x:W*.07,t:'tree',v:0.2},{x:W*.33,t:'tree',v:0.7,burnt:true},{x:W*.38,t:'
 if(shots) shots(ctx,W,H,S);
 fs.writeFileSync(out,cv.toBuffer('image/png')); return cv;};
 `;
-fs.writeFileSync(__dirname+'/gen.js',code);
-if(require.main===module){const f=require('./gen.js'); f('Gradient',__dirname+'/g.png');}
+const cacheDir = path.join(__dirname, '.cache');
+fs.mkdirSync(cacheDir, { recursive: true });
+const genPath = path.join(cacheDir, 'gen.js');
+fs.writeFileSync(genPath, code);
+module.exports = genPath;
+
+if (require.main === module) {
+  seedRandom();
+  const out = path.join(outDir(), 'g.png');
+  require(genPath)('Gradient', out);
+  console.log('wrote', out);
+}
