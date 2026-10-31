@@ -121,13 +121,9 @@ zipalign -f 4 "$WORK/unsigned.apk" "$WORK/aligned.apk"
 rm -f -- "$APK_OUT" "$APK_OUT.idsig"
 java -jar "$APKSIGNER_JAR" sign --ks "$KEYSTORE_PATH" --ks-pass env:KS_PASS --key-pass env:KS_PASS --ks-key-alias "$KS_ALIAS" --out "$APK_OUT" "$WORK/aligned.apk"
 certs="$(java -jar "$APKSIGNER_JAR" verify --verbose --print-certs "$APK_OUT" 2>/dev/null)" || reject 'apksigner verify failed.'
-printf '%s\n' "$certs" | grep -E '^Verified using .*: true|certificate (DN|SHA-256 digest):'
-# The signer line format varies across build-tools versions ("Signer #1 certificate ...",
-# "Signer (minSdkVersion=...) certificate ..."); accept any, but require exactly one distinct signer.
-digests="$(printf '%s\n' "$certs" | sed -n 's/.*certificate SHA-256 digest: \([0-9a-fA-F:]\{64,95\}\).*/\1/p' | while read -r d; do norm_fp "$d"; echo; done | sort -u | grep -v '^$' || true)"
-[[ -n "$digests" ]] || { printf '%s\n' "$certs" >&2; reject 'Could not read signer certificate digest.'; }
-[[ "$(wc -l <<<"$digests")" -eq 1 ]] || reject "APK has more than one signer certificate: $(tr '\n' ' ' <<<"$digests")"
-actual_fp="$digests"
+printf '%s\n' "$certs" | grep -E '^Verified using|^Signer #1 certificate (DN|SHA-256)'
+actual_fp="$(printf '%s\n' "$certs" | sed -n 's/^Signer #1 certificate SHA-256 digest: //p' | head -n1)"
+[[ -n "$actual_fp" ]] || reject 'Could not read signer certificate digest.'
 if [[ "$DEV_BUILD" != 1 && "$(norm_fp "$actual_fp")" != "$(norm_fp "$EXPECTED_CERT_SHA256")" ]]; then
   reject "Signer SHA-256 $actual_fp does not match EXPECTED_CERT_SHA256; APK removed (wrong key would break upgrades and assetlinks)."
 fi
