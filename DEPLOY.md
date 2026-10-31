@@ -1,41 +1,100 @@
-# Scorched Tanks — Deployment & Links (v1.11, 2026-10-19)
+# Scorched Tanks — build, deployment and release guide
 
-## Live links
-| What | URL |
+**Audited against repository source v1.15 on 2026-10-31.** These are source-grounded procedures and cautions. A clean release build and production deploy were **not** performed by this review. Do not interpret a successful `/health` response as proof of a working Android/online game.
+
+## Endpoints in checked-in source
+
+| Endpoint | URL/meaning |
 |---|---|
-| Landing page | https://scorched-tanks.yishai-k.workers.dev/ |
-| Room invite (example) | https://scorched-tanks.yishai-k.workers.dev/join/ABCD |
-| Play in browser | https://scorched-tanks.yishai-k.workers.dev/play (auto-join: `/play#room=ABCD`) |
-| APK download | https://scorched-tanks.yishai-k.workers.dev/download |
-| Health check | https://scorched-tanks.yishai-k.workers.dev/health |
-| Android App Links file | https://scorched-tanks.yishai-k.workers.dev/.well-known/assetlinks.json |
-| WebSocket – quick match | `wss://scorched-tanks.yishai-k.workers.dev/ws/quick?name=&pid=&ver=` |
-| WebSocket – room | `wss://scorched-tanks.yishai-k.workers.dev/ws/room/CODE?name=&pid=&ver=` |
-| Cloudflare dashboard | https://dash.cloudflare.com/ → Workers & Pages → scorched-tanks (account 0f6475716c1a85bfa0a5956792e85b52) |
-| Google Drive backups | https://drive.google.com/drive/folders/1EcwcT79F1iFWtzCUGGhhlznfbt_kqFGX |
-| GitHub repo | https://github.com/yishaik/Scorched |
+| Canonical Worker (referenced by source) | `https://scorched-tanks.yishai-k.workers.dev` |
+| Marketing domain used in links | `https://tanks.yishaik.com` (routing/DNS must be independently verified) |
+| Web | `/play` |
+| APK | `/download` |
+| Invite | `/join/ABCD` or browser `/play#room=ABCD` |
+| Health | `/health` |
+| App Links | `/.well-known/assetlinks.json` |
+| API | `POST /api/room`, `GET /api/room/ABCD` |
+| WebSocket | `wss://scorched-tanks.yishai-k.workers.dev/ws/quick` and `/ws/room/ABCD` |
 
-## Layout
-- `game/index.html` — the entire game (Canvas + WebAudio + online netcode). `GAME_VER` constant near `NET_BASE`.
-- `landing/index.html` — branded invite/download page (self-contained, no external assets).
-- `server/worker.js` — Cloudflare Worker + Durable Objects `Lobby` (matchmaking) and `Room` (roster, relay, host, snapshots). Protocol is documented at the top of the file.
-- `server/metadata.json` — first deploy only (creates DO migration tag `v1`).
-- `server/meta-update.json` — every later deploy (no `migrations`; sending them again fails with "migration tag precondition failed").
-- `server/deploy.sh` — bundles landing + game + APK into the Worker and uploads it.
-- `android/` — WebView wrapper (package `com.yishai.scorchedtanks`, minSdk 24, target 34). Deep links: `scorchedtanks://join/CODE` and `https://scorched-tanks.yishai-k.workers.dev/join/CODE`.
-- `build.sh` — builds/signs the APK without Gradle (aapt, d8, zipalign, apksigner). `KS_PASS=<keystore password> VC=<versionCode> ./build.sh`. `KS_PASS` is required (the script exits if it's unset) and is used for both the store and key password; it is read from the environment, never stored in the repo.
-- `apk/ScorchedTanks.apk` — latest build (versionCode 11, versionName 1.11).
-- `key.jks` — signing key (alias `st`). NOT in this repo: the key and its password are kept privately. Never commit them to a public repo. Losing the key means updates won't install over existing installs.
+These endpoints come from `server/worker.js`. Remote availability, DNS alias configuration and current published contents have not been checked.
 
-## Release checklist (new version)
-1. Bump `GAME_VER` in `game/index.html`, `APP_VER` in `server/worker.js`, and the version in the landing footer.
-2. Build: `KS_PASS=<keystore password> VC=12 ./build.sh` (versionName becomes 1.12). Edit the paths at the top of `build.sh` first: `A=` is the tools/output folder, `R=` the android folder, and line 6 copies the game files (`game/*.html,css,js`) into the APK assets.
-3. Copy the new APK to `apk/ScorchedTanks.apk`.
-4. `CF_API_TOKEN=... ./server/deploy.sh` — updates the server, landing page, browser game and APK download together.
-5. Check `/health` shows the new `app` version, then upload a dated backup zip to Drive.
+## Release architecture
 
-## Versions
-Clients send `ver` on connect; the room roster includes each player's `ver`. Mismatched versions are allowed to play together — the lobby only shows a yellow tag and an UPDATE link.
+```mermaid
+flowchart TD
+  Source["game/ + landing/ + apk/"] --> Inline["inline_assets.py inlines game CSS/JS"]
+  Inline --> Upload["server/deploy.sh: Cloudflare Workers API"]
+  Source --> Upload
+  Upload --> Worker["Worker: HTML, APK, HTTP + WebSocket"]
+  Worker --> DO["Durable Objects: Lobby + Room"]
+  Android["Java WebView + packaged assets"] --> APK["Signed APK"]
+  APK --> Source
+```
 
-## Build prerequisites (Linux)
-`openjdk-21-jdk-headless aapt zipalign`, plus `android.jar` (platform-34-ext7_r03.zip) and build-tools jars (build-tools_r34-linux.zip) from dl.google.com. Paths are set at the top of `build.sh`.
+### Local web development (safe, no production writes)
+
+```bash
+python3 -m http.server 8000 --directory game
+python3 server/inline_assets.py game /tmp/scorched-game.html
+```
+
+The browser serves local CSS/JS and references fonts from Google. Opening `game/index.html` from disk is possible in supported browsers with adjacent assets, but localhost HTTP provides a more consistent test origin.
+
+### Android build: important current limitations
+
+**The checked-in `build.sh` is NOT a portable build script.** Its lines 5–8 reference `/workspace/work/apk`, `/workspace/work/scorched-android`, and an unrelated built-site HTML path. Running it unmodified against a fresh clone cannot be relied on to build the checked-in game. Fix and review those paths before using it for a release. Never assume that it packages `game/index.html` as currently committed.
+
+Historical manual pipeline: Android platform-34 `android.jar`; aapt; Java compilation; d8; APK package; zipalign; apksigner. It accepts `KS_PASS` (required) and `VC` (versionCode, also used to form `1.<VC>`). The script will **create a new signing keystore if the expected key is absent**. This can irreversibly break in-place upgrades for an existing installation; a release script should fail closed instead.
+
+A separate Gradle project is present in `android/`:
+
+- Android Gradle Plugin 8.5.2; JDK 17; minSdk 24; targetSdk 34.
+- Its checked-in `versionCode=1`, `versionName=1.0`; `release` currently uses a debug signing config.
+- There is **no checked-in Gradle wrapper**. Use a known Gradle/Android Studio environment for development builds, not as an assumed production signing/release path.
+- The historical manual aapt build uses `--target-sdk-version 28`, differing from Gradle's targetSdk 34. Verify the actual compiled manifest for any released APK.
+
+**Never commit or print `key.jks` or passwords.** Keep release signing material outside Git, preserve signer continuity, and confirm APK fingerprint before distribution.
+
+### Server deployment (writes production)
+
+`server/deploy.sh` is a real production update. It:
+
+1. Copies `landing/index.html` into `server/landing.txt`.
+2. Inlines local game CSS/JS into `server/game.txt` with `inline_assets.py`.
+3. Copies `apk/ScorchedTanks.apk` to `server/app.apk.bin`.
+4. Uploads `worker.js`, text assets and APK using `CF_API_TOKEN` and `CF_ACCOUNT_ID` (defaults to the historical account configured in script).
+5. Requests `/health`; it does not currently assert the JSON Cloudflare API success flag or run a full post-deploy test suite.
+
+The script currently uses `server/meta-update.json`, which retains existing `Lobby`/`Room` Durable Object bindings and **does not** re-run a migration. `server/metadata.json` carries the original `v1` migration and is for initial provisioning only. Do not resend that migration on an existing Worker.
+
+Example invocation **only after staging/review and release verification**:
+
+```bash
+# This command DEPLOYS to the configured account. Do not run for a smoke test.
+CF_API_TOKEN=... CF_ACCOUNT_ID=... ./server/deploy.sh
+```
+
+Prefer a narrow-scope Workers deployment token, secret injection through an approved runner and a staging Worker/account for rehearsal. Never put tokens in shell history or log output when you can avoid it.
+
+## Release checklist
+
+- [ ] Work from a reviewed PR; confirm current `main` base SHA and review diffs.
+- [ ] Reconcile and bump `GAME_VER` in `game/index.html`, `APP_VER` in `server/worker.js`, and landing footer version. Document in `CHANGELOG.md`.
+- [ ] Fix/build from repository-relative Android asset inputs; verify source checksum packaged in APK.
+- [ ] Verify manifest package, min/target SDK, `versionCode`, `versionName` and signer fingerprint; reuse existing release keystore.
+- [ ] Confirm the APK in `apk/` is the intended signed artifact; verify `/download` content will match it.
+- [ ] Run local mobile and multi-client tests per [TESTING](docs/TESTING.md); stage server/DO changes before production.
+- [ ] Inspect Worker bundle and migration metadata; use `meta-update.json` on existing Worker.
+- [ ] Make a backup of repo commit/previous APK/Worker bundle and record rollback procedure; keep private credentials outside the repo.
+- [ ] Deploy intentionally; inspect API response **and** `/health`, `/play`, `/download`, WebSocket room lifecycle.
+- [ ] Test fresh install, update over previous APK, invite/deep links and two-client online match.
+- [ ] Record deployed git SHA, APK SHA256, version and signer fingerprint in a private release log.
+
+## Rollback / recovery
+
+- A Worker rollback must restore a previously tested Worker script **and its matching inlined HTML/APK** (a Worker-only code rollback may retain incompatible assets).
+- Do not reapply or automatically undo Durable Object schema migrations. This repo stores game room metadata and last snapshots; assess data compatibility and room expiration first.
+- For Android, previously installed clients can be upgraded only with the same signing identity and appropriate versionCode progression. Do not invent/regenerate a missing production key.
+- A stable `/health` after rollback does not prove clients rejoin correctly; do a full two-client round.
+
+See [architecture](docs/ARCHITECTURE.md), [protocol](docs/PROTOCOL.md), [testing](docs/TESTING.md), and [audit](docs/REVIEW-2026-10-31.md).
