@@ -42,7 +42,7 @@ The turn-based tank artillery classic, rebuilt for your phone and your browser. 
 
 🤖 **7 AI personalities.** Moron, Shooter, Poolshark, Tosser, Chooser, Spoiler and Cyborg, from hopeless to deadly.
 
-⚙️ **Your rules.** 2 to 10 tanks, any number of rounds, starting cash, wind, walls (wrap, padded, concrete), terrain, gravity and sky.
+⚙️ **Your rules.** Local games support 2 to 10 tanks; online private rooms created by the app default to 4 seats. Choose rounds, starting cash, wind, walls (wrap, padded, concrete), terrain, gravity and sky.
 
 ## How to play
 
@@ -61,13 +61,15 @@ It's coming to **Google Play** as a paid download. Buying it there is the easies
 
 | What | Where |
 |---|---|
-| The whole game (one file: Canvas + WebAudio) | [`game/index.html`](game/index.html), open it in any browser |
+| Browser game (Canvas + WebAudio + JavaScript) | [`game/index.html`](game/index.html), with adjacent `hark.css`, `hark-hero.css` and `hark.js` |
 | Android wrapper (WebView, fullscreen, deep links) | [`android/`](android/) |
-| APK build without Gradle | [`build.sh`](build.sh) (needs `aapt`, `d8`, `zipalign`, `apksigner`; sign with your own key) |
+| APK build scripts | [`android/`](android/) (Gradle) and [`build.sh`](build.sh) (legacy aapt). **Neither is a verified portable v1.15 release pipeline**; see [DEPLOY.md](DEPLOY.md) |
 | Online server (Cloudflare Worker + Durable Objects) | [`server/`](server/), see [DEPLOY.md](DEPLOY.md) |
 | Store art and copy, and the renderer that makes them | [`marketing/`](marketing/), [`tools/render/`](tools/render/) |
 
-Full docs live in [DOCS.md](DOCS.md), changes in [CHANGELOG.md](CHANGELOG.md), and contributor notes in [AGENTS.md](AGENTS.md) and [docs/HANDOFF.md](docs/HANDOFF.md).
+For a local web preview: `python3 -m http.server 8000 --directory game` and open `http://localhost:8000`. The online menu still connects to the hosted Worker.
+
+Engineering guides: [Developer docs](DOCS.md) · [Architecture](docs/ARCHITECTURE.md) · [Multiplayer protocol](docs/PROTOCOL.md) · [Deployment](DEPLOY.md) · [Testing](docs/TESTING.md) · [Source audit](docs/REVIEW-2026-10-31.md) · [Changelog](CHANGELOG.md) · [Contributing/agents](AGENTS.md) · [Handoff](docs/HANDOFF.md).
 
 ## License
 

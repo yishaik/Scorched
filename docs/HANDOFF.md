@@ -1,53 +1,40 @@
-# Handoff — Scorched Tanks (2026-10-19)
+# Project handoff — Scorched Tanks
 
-## Current state
-- **v1.11 is live** at https://scorched-tanks.yishai-k.workers.dev:
-  - `/` landing, `/play` browser game, `/download` APK, `/join/CODE` room invites, `/health` version check.
-- Server: Cloudflare Worker **`scorched-tanks`** with Durable Objects **`Lobby`** (matchmaking) and **`Room`** (roster, relay, host, snapshots).
-- Android APK `com.yishai.scorchedtanks` (versionCode 11) is in `apk/`. According to a Family Link notice on 2026-10-18, it was installed on Maayan's phone.
-- In progress: nothing. No feature work is underway.
+**Updated:** 2026-10-31 — static source audit of `main` at `26b9c8b`. Previous handoff dated 2026-10-19 targeted v1.11 and is superseded by this file.
 
-## Repo
-- Only `main` exists (initial import of v1.11, `b8dfdfc`). There are no other branches or PRs except this handoff PR (`docs/handoff`).
+## Source state (not live-server certification)
 
-## Backups
-- Drive folder: https://drive.google.com/drive/folders/1EcwcT79F1iFWtzCUGGhhlznfbt_kqFGX holds backup zips up to v11, the APK and the docs.
-- **Those Drive docs and backups still contain the keystore password, so treat them as private.** Never copy them into this repo as-is.
+- Game, Worker and landing source advertise **v1.15** (`GAME_VER`, `APP_VER`, footer).
+- Core gameplay supports offline 2–10 tanks, 7 CPU types, map editor, modern/classic graphics, save/continue, shops, 30+ weapons and destructible terrain.
+- Online uses the Cloudflare Worker and `Lobby`/`Room` Durable Objects. Private room creation requests four seats; the Room DO maximum is six.
+- Connection handling includes retry, host/peer state sync, host migration and CPU takeover, but trust/cheat resilience is limited.
+- Browser/Android game sources and binary APK coexist in the repo. The checked-in binary's internal version/signature were not verified.
+- No complete automated test suite or valid repository-root GitHub Actions workflow was found.
 
-## Proposed definition of done (NOT yet confirmed by Yishai)
-1. v1.12 runs stably on Maayan's phone after a real-device playtest.
-2. Fix: settings not persisting between launches.
-3. Fix: rotating mid-round stretches the terrain.
-4. One full online game between 2 phones, joined through an invite link.
+## Current documented priorities
 
-## Known issues
-These come from `DOCS.md` "Known gaps", which was written around v1.4, so some may already be fixed. Verify each one before working on it.
-- Not playtested thoroughly on a real device.
-- Walls don't affect Rollers and Diggers.
-- The Cavern ceiling doesn't fall.
-- Max power doesn't drop with damage.
-- Settings aren't saved between launches. The APK enables DOM storage, so localStorage can be used.
-- Rotation mid-round stretches the terrain instead of regenerating it.
+1. **Release reproducibility:** remove workspace-specific paths in `build.sh`; align Gradle/manual build versioning, target SDK, signer and asset inputs.
+2. **Verification baseline:** move/add a valid root CI workflow and static/browser/Worker checks; conduct real Android install, update and 2-phone online session.
+3. **Trust hardening:** authenticate/authorize player IDs and room actions; validate shop transactions and relay payloads; control API creation rates.
+4. **Reliability:** fix quick-match room-collision exhaustion path; enforce protocol compatibility/testing; strengthen migration/snapshot behavior.
+5. **Visual polish:** validate Modern mode performance and decor persistence before adding more effects.
 
-## Secrets and env vars (names only, no values in this repo)
-| Name | What | Where it lives |
-|---|---|---|
-| `KS_PASS` | Keystore password (store and key) for `build.sh` | Kept privately by Yishai |
-| `key.jks` | APK signing key, alias `st`. Losing it means updates won't install over existing installs | Kept out of git (`.gitignore`), held privately |
-| `CF_API_TOKEN` | Cloudflare API token for `server/deploy.sh` | Kept privately by Yishai |
+These are engineering recommendations, **not already-open GitHub issues** and not implemented by the documentation-only PR.
 
-The Cloudflare account id is listed in `DEPLOY.md`.
+## Reference documents
 
-## Build / run / test
-- **Play locally:** open `game/index.html` in a browser. Local and CPU play works offline, and online mode connects to the live worker.
-- **Build APK:** set up the prerequisites in `DEPLOY.md`, edit the paths at the top of `build.sh`, put `key.jks` at `$A/key.jks`, then run `KS_PASS=<password> VC=12 ./build.sh` and copy the output to `apk/ScorchedTanks.apk`.
-- **Deploy:** `CF_API_TOKEN=<token> ./server/deploy.sh`. Use `meta-update.json` for later deploys, and do not resend migrations.
-- **Verify:** `curl https://scorched-tanks.yishai-k.workers.dev/health` should show the new `app` version.
-- **Tests:** there are no automated tests. `android/.github/workflows/build.yml` is not at the repo root, so GitHub Actions never runs it.
+- [DOCS.md](../DOCS.md) — developer index and quickstart
+- [ARCHITECTURE.md](ARCHITECTURE.md) — system, gameplay and storage
+- [PROTOCOL.md](PROTOCOL.md) — HTTP/WS messages and trust boundaries
+- [TESTING.md](TESTING.md) — acceptance matrix and test plan
+- [REVIEW-2026-10-31.md](REVIEW-2026-10-31.md) — prioritized, code-linked audit
+- [DEPLOY.md](../DEPLOY.md) — release checklist and precautions
+- [AGENTS.md](../AGENTS.md) — contributor/agent guardrails
 
-## Next steps
-1. Get Yishai to confirm or adjust the definition of done.
-2. Playtest v1.11 on a real phone and re-check the known issues list.
-3. Fix settings persistence and the rotation terrain stretch, then release v1.12 following the checklist in `DEPLOY.md`.
-4. Run a 2-phone online game through an invite link.
-5. Optional: move the CI workflow to `.github/workflows/` at the root and add a smoke test, for example a `/health` check.
+## Operational guardrails
+
+Do not deploy automatically or mutate existing Durable Object migrations during a documentation/code review. Do not include keystore material, passwords, private backup archives, or Cloudflare tokens in Git. A previous historical handoff noted private backup documents containing credentials: treat the backup storage as sensitive; rotate exposed credentials if a breach is confirmed.
+
+## Definition of done for next reliability milestone (proposal)
+
+A clean checkout can reproducibly build web + signed test APK; required checks run on PR; an Android install/update is verified on a physical device; a two-device private game completes with shop, round transition, reconnect and host migration; release artifacts and signer are recorded. The milestone is **not yet achieved**.

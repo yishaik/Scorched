@@ -1,100 +1,81 @@
-# Scorched Tanks: Developer Documentation
+# Scorched Tanks — developer documentation (v1.15 source)
 
-## What it is
-Scorched Tanks is a faithful recreation of Scorched Earth (1991, DOS, by Wendell Hicken), built for Android phones with touch controls. It was built 2026-10-13 and 2026-10-14. The game UI is in English, as in the original.
+This page is the developer entry point. The playable product description and screenshots are in [README.md](README.md). Engineering references below were reviewed against the source at `main` commit `26b9c8b` on **2026-10-31**.
 
-## Layout
-| Path | What |
+> **Review scope:** static source inspection only. Building a signed APK, testing devices, deploying to Cloudflare, and verifying the production domain were **not** performed as part of the documentation refresh.
+
+## Start here
+
+| Need | Reference |
 |---|---|
-| `game/index.html` | The entire game in one file: HTML5 Canvas, WebAudio and vanilla JS, with no build step. |
-| `game/hark.css`, `hark-hero.css`, `hark.js` | Page-shell styles and scripts the HTML references. The game itself does not depend on them. |
-| `android/` | Minimal Android WebView wrapper. Source is `MainActivity.java`, `AndroidManifest.xml` and the vector icon. It also has Gradle files in case you want to build it in Android Studio. |
-| `apk/ScorchedTanks.apk` | Latest signed build: v1.4, versionCode 4, package `com.yishai.scorchedtanks`. |
-| `build.sh` | Builds the APK without Gradle. |
-| `key.jks` | Signing keystore. Included in the private backup only, never in a public repo. |
+| System components, data flow, storage, implementation locations | [Architecture](docs/ARCHITECTURE.md) |
+| HTTP routes, WebSocket envelopes, room lifecycle and trust limits | [Multiplayer protocol](docs/PROTOCOL.md) |
+| Local development, Android/Worker publishing and rollback precautions | [Deployment](DEPLOY.md) |
+| Manual QA matrix, reproducible checks and automation plan | [Testing](docs/TESTING.md) |
+| Code review findings and remediation order | [Source audit (2026-10-31)](docs/REVIEW-2026-10-31.md) |
+| Current handoff/next development priorities | [Handoff](docs/HANDOFF.md) |
+| Agent and contributor constraints | [AGENTS.md](AGENTS.md) |
+| Historical release changes | [CHANGELOG.md](CHANGELOG.md) |
 
-## Playing / testing
-- **Browser:** open `game/index.html` directly. It works in portrait and landscape, with mouse or touch.
-- **Android:** install the APK and allow installs from unknown sources.
-  - It runs fullscreen and keeps the screen on.
-  - It rotates with the phone (orientation `fullUser`).
-  - The game loads from `file:///android_asset/index.html`.
+## Quickstart: web
 
-## Game features
-- **Players:** 2–10 tanks.
-  - Each is a human or one of 7 CPU types: Moron, Shooter, Poolshark, Tosser, Chooser, Spoiler, Cyborg.
-- **Rounds and money:** rounds, cash and kills, a standings table, and a shop between rounds.
-  - The shop has Buy and Sell, and inventory carries over between rounds.
-  - CPU players buy too, in the original pack sizes.
-  - Since v1.14 every price is a tenth of the original and sold one unit at a time; press and hold BUY/SELL to repeat.
-- **Weapons:**
-  - Missiles: Baby Missile, Missile, Baby Nuke, Nuke.
-  - Clusters: Leapfrog, Funky Bomb, MIRV, Death's Head.
-  - Fire: Napalm, Hot Napalm.
-  - Tracers: Tracer, Smoke Tracer.
-  - Rollers: Baby, regular, Heavy.
-  - Riot weapons: Riot Charge, Riot Blast, Riot Bombs.
-  - Diggers: Baby, regular, Heavy.
-  - Sandhogs: Baby, regular, Heavy.
-  - Dirt: Dirt Clod, Dirt Ball, Ton of Dirt, Liquid Dirt, Dirt Charge.
-  - Specials: Earth Disrupter, Plasma Blast, Laser.
-- **Items:**
-  - Defence: Parachute, Battery, Shield, Force Shield, Heavy Shield, Mag Deflector, Super Mag.
-  - Movement: Fuel Tank, which lets the tank drive left and right.
-  - Firing aids: Contact Trigger, plus Heat, Ballistic, Horizontal and Vertical Guidance.
-- **Terrain:** destructible pixel bitmap, with tunnels, falling dirt and falling tanks.
-- **Options:**
-  - Wind: None, Normal, Strong, Changing.
-  - Walls: Open, Wrap, Padded, Concrete, Random.
-  - Terrain: Random, Rolling, Mountains, Jagged, Flat, Cavern.
-  - Gravity: Low, Normal, High.
-  - Sky: Gradient, Black, Stars, Random.
-- **Maps (v1.14+):** a Map button in setup and in the online lobby opens a picker (Generated, saved maps, edit, delete, draw new).
-  - The builder: draw the ground with a finger; TREE/BUSH/WRECK tools place decor (tap again to remove); CLEAR, SMOOTH, SAVE.
-  - Stored in localStorage `st-maps` as `{n, h: 160 heights 0-100, d: [[column, type]]}`; the chosen map rides in `cfg.map`, so online guests get it.
-- **Graphics (v1.14+):** Modern (default) or Classic, in setup and in the in-game Settings; stored in `st-gfx`.
-  - Modern: a painted sky per sky option, three parallax ridges with trees and wreck silhouettes, a grass edge, textured dirt and rocks, detailed tanks, smoke from dead tanks.
-  - Decor (trees, bushes, wrecks) is visual only: random decor is derived from a hash of the terrain, so it never touches the game RNG; a blast burns what it reaches.
-  - Button labels shrink to fit their buttons (`fitButtons`).
-- **Presentation:** title screen with fireworks, and taunts when firing or dying.
-  - WebAudio sound effects.
-  - Pause, mute and quit.
+The source HTML references nearby `game/hark.css`, `hark-hero.css`, `hark.js` and Google Fonts. It is **not** literally one standalone file unless local assets are inlined. There is no npm bundle/build for the gameplay.
 
-## Controls
-- **Drag aiming:** drag anywhere on the battlefield on your turn.
-  - The direction from the tank to your finger sets the angle, 0–180°.
-  - The distance sets the power: about 45% of the canvas width is full power, which is 100.
-  - Releasing does not fire.
-- **Buttons:** Angle −/+, Power −/+, Weapon, Items, Move (shown only with fuel) and FIRE. Holding a button repeats it.
-- **Layout:**
-  - Portrait: a compact HUD, then the canvas filling the middle, then 2 thin rows of controls (about 97px).
-  - Landscape: HUD, then canvas, then a single 48px row.
-  - Nothing overlaps the canvas except popups.
-- Health is shown as a coloured number above each tank.
+```bash
+git clone https://github.com/yishaik/Scorched.git
+cd Scorched
+python3 -m http.server 8000 --directory game
+# Open http://localhost:8000
+```
 
-## Building the APK (`build.sh`)
-The sandbox it was built in is ARM64 Linux, so it skips Gradle and aapt2 and uses Debian packages instead.
-1. `sudo apt-get install openjdk-21-jdk-headless aapt zipalign`
-2. Download and unzip into `$A` (default `/workspace/work/apk`):
-   - `https://dl.google.com/android/repository/platform-34-ext7_r03.zip` into `$A/p`, for `android-34/android.jar`
-   - `https://dl.google.com/android/repository/build-tools_r34-linux.zip` into `$A/b`, for the `lib/d8.jar` and `lib/apksigner.jar` jars
-3. Put `key.jks` at `$A/key.jks` (alias `st`). The key and its password are kept privately and are not in this repo; pass the password as `KS_PASS` (used for both store and key).
-   - Always reuse the same key, or the update won't install over the existing app.
-4. Run `KS_PASS=<keystore password> VC=<next versionCode> ./build.sh`. Output: `$A/out/ScorchedTanks.apk`.
+Use local 2-player or vs-CPU modes for offline gameplay. The *online* menu always points at `scorched-tanks.yishai-k.workers.dev` (`NET_BASE` in `game/index.html`); it does not use an automatically started local backend. Serving the page on localhost does not create an isolated multiplayer test environment.
 
-The pipeline:
-1. aapt v1 generates R.java.
-2. javac compiles it (`--release 11`).
-3. d8 produces the dex.
-4. aapt packages the res and assets.
-5. The dex is added, then zipaligned and signed with apksigner (v1+v2).
+To produce the same inline HTML variant used in the Worker deploy:
 
-targetSdk is 28, which avoids the uncompressed resources.arsc requirement.
+```bash
+python3 server/inline_assets.py game /tmp/scorched-game.html
+```
 
-On a normal x86 machine you can instead open `android/` in Android Studio. Copy `game/*` into `android/app/src/main/assets/` first.
+## What the game currently implements
 
-## Known gaps / ideas
-- Not yet play-tested thoroughly on a real phone.
-- Walls don't affect Rollers or Diggers.
-- The Cavern ceiling doesn't fall.
-- The original game's rule that max power drops with damage isn't implemented. The cap is one constant, used by both the drag and Power +.
+- Local 2–10 players, human and CPU; seven named CPU profiles (Moron, Shooter, Poolshark, Tosser, Chooser, Spoiler, Cyborg).
+- More than 30 weapons across missiles, nukes, clusters, napalm, rollers, diggers, sandhogs, dirt, riot, plasma and laser; shields, guidance, parachutes and fuel.
+- Turn-based trajectory/power/wind physics, bitmap terrain deformation and settling, round scoring/cash, and shops.
+- Modern/Classic renderer, dynamic sky, terrain texture, background silhouettes, trees/bushes/wrecks, hit/burn decoration.
+- Map picker/editor with 160-height-sample maps and placed decoration. Maps persist in localStorage, up to 30.
+- Local game save and continue, remembered setup per mode, graphics/mute preferences. Local saves are not online/cloud backups.
+- Online public quick matching and shareable private rooms, host lobby settings, turn timer, simultaneous shopping, best-effort reconnect, AI substitution on disconnect and host migration.
+
+**Capacity distinction:** local supports 2–10 tanks; Room DO enforces **2–6 seats**, and the browser client creates rooms requesting **4 seats** (quick match also 4). Online 10-player matches are not supported by the current room implementation.
+
+## Main source
+
+`game/index.html` owns almost all game logic, UI and networking. Important entrypoints:
+
+- `Net` near the `NET_BASE` and `GAME_VER` constants: WebSocket connection, matchmaking and roster.
+- `WEAPONS`, `ITEMS`, `cfg`, `AI`: player setup and data tables.
+- `makeTerrain`, `genDecor`, `renderTerrain`, `drawWorld`: world generation/rendering.
+- `fire`, `impact`, `update`, `cpuMove`, `startMatch`, `nextTurn`: simulation and turn control.
+- `serializeState`, `applyState`, `saveGame`: local snapshot and online host state exchange.
+- `netBroadcast`, `netShop*`, `netOn*`, `onlineHostChanged`: online orchestration.
+
+The server is `server/worker.js` (Worker default export, `Lobby` and `Room` DO classes). It **does not** run a trusted copy of gameplay physics. The online host is a client, with relay and occasional state snapshots.
+
+## Android and release status
+
+The Android wrapper runs a locally bundled game through WebView, supports fullscreen and invites through the native share bridge. It has a separate Gradle project and historical manual `build.sh`. **Neither is verified as a clean-clone, production-equivalent v1.15 release build.** Read [DEPLOY.md](DEPLOY.md) before building; do not run `server/deploy.sh` while simply testing.
+
+The repository contains `apk/ScorchedTanks.apk`, but its actual version, signing identity and target SDK have not been independently inspected in this review. `game/index.html`, `landing/index.html` and `server/worker.js` each identify v1.15 in source.
+
+## Project limitations, by design vs gaps
+
+- The gameplay source is intentionally monolithic, which helps rapid standalone iteration but makes isolated unit testing and modular releases harder.
+- WebAudio and external font loading depend on browser capabilities; audio starts only after user interaction.
+- Networking uses a four-character room code and client-supplied persistent `pid`, **not** user accounts or verified authentication.
+- Players may mix versions with a warning; there is no strict protocol compatibility gate.
+- Current rendering-helper scripts are historical and not runnable from a vanilla checkout; see the audit.
+- Code known gaps still include wall behavior for some specialty weapons, cavern ceiling settling and max-power reduction with damage; all require behavior verification before treating them as confirmed regressions.
+
+## Contribution discipline
+
+Use a feature branch and PR; never commit secrets, keystores or signing passwords. Separate source-code fixes from documentation/release operations. For all gameplay changes verify local save/restore, screen rotation, online host/peer state parity, disconnect recovery and at least one representative weapon per class. See [AGENTS.md](AGENTS.md) and [TESTING.md](docs/TESTING.md).
