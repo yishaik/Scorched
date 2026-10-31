@@ -16,8 +16,8 @@ android {
     // The manual build.sh path still produces targetSdk 28 for the sideloaded APK.
     targetSdk 36
     // Keep in step with GAME_VER (game/index.html) and APP_VER (server/worker.js); tests/node checks it.
-    versionCode 15
-    versionName '1.15'
+    versionCode 16
+    versionName '1.16'
   }
   // Single source of truth for the game: package ../../game (the same files build.sh uses).
   sourceSets { main { assets.srcDirs = ['../../game'] } }
