@@ -1,0 +1,16 @@
+{
+  "name": "scorched-render-tools",
+  "private": true,
+  "description": "Renders store/marketing images from game/index.html drawing code",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "render": "node mk.js && node mb.js",
+    "check": "node check.js"
+  },
+  "dependencies": {
+    "canvas": "3.2.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
