@@ -1,0 +1,101 @@
+name: CI
+
+# Build and test only. This workflow never publishes releases, uploads APKs or deploys the Worker.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  shell-tests:
+    name: Shell tests (build.sh fail-closed, deploy.sh with fake curl)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - name: Syntax
+        run: for f in build.sh server/deploy.sh tools/android/build-dev-apk.sh tests/*.sh; do bash -n "$f"; done
+      - name: build.sh checks (no SDK)
+        run: env -u ANDROID_JAR -u D8_JAR -u APKSIGNER_JAR bash tests/test_android_build.sh
+      - name: deploy.sh checks (fake curl, no network)
+        run: bash tests/test_deploy.sh
+      - name: deploy.sh --dry-run on the real tree
+        run: bash server/deploy.sh --dry-run
+
+  node-tests:
+    name: Node tests (versions, syntax, game logic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - run: node --test tests/node/*.test.mjs tests/*.test.mjs
+
+  render-tools:
+    name: Renderer runs from a clean checkout (deterministic)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tools/render/package-lock.json
+      - run: npm ci
+        working-directory: tools/render
+      - run: npm run check
+        working-directory: tools/render
+
+  apk-smoke:
+    name: APK smoke build (throwaway debug key, never released)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Locate Android SDK tools
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          BT="$(ls -d "$SDK"/build-tools/* | sort -V | tail -n1)"
+          PJ="$SDK/platforms/android-34/android.jar"
+          if [ ! -f "$PJ" ]; then yes | "$SDK/cmdline-tools/latest/bin/sdkmanager" "platforms;android-34" >/dev/null; fi
+          echo "$BT" >> "$GITHUB_PATH"
+          { echo "ANDROID_JAR=$PJ"; echo "D8_JAR=$BT/lib/d8.jar"; echo "APKSIGNER_JAR=$BT/lib/apksigner.jar"; } >> "$GITHUB_ENV"
+          echo "build-tools: $BT"
+      - name: Manual path (build.sh) with throwaway key + release-policy checks
+        run: bash tests/test_android_build.sh
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Gradle path (assembleDebug + unsigned assembleRelease)
+        working-directory: android
+        run: gradle :app:assembleDebug :app:assembleRelease --no-daemon --stacktrace
+      - name: Check Gradle APKs package game/ and are not release-signed
+        run: |
+          set -euo pipefail
+          VN="$(sed -n 's/.*const GAME_VER = "\([^"]*\)".*/\1/p' game/index.html | head -n1)"
+          DBG=android/app/build/outputs/apk/debug/app-debug.apk
+          REL=android/app/build/outputs/apk/release/app-release-unsigned.apk
+          test -f "$DBG"; test -f "$REL"
+          test ! -f android/app/build/outputs/apk/release/app-release.apk
+          aapt dump badging "$DBG" | head -3
+          aapt dump badging "$DBG" | grep -q "versionCode='${VN##*.}' versionName='$VN'"
+          aapt dump badging "$DBG" | grep -q "targetSdkVersion:'36'"
+          for f in game/*.html game/*.css game/*.js; do unzip -p "$REL" "assets/$(basename "$f")" | cmp - "$f"; done
+          if java -jar "$APKSIGNER_JAR" verify "$REL" 2>/dev/null; then echo 'release APK is signed without a release key' >&2; exit 1; fi
+          echo 'Gradle APKs OK (artifacts are not uploaded)'
