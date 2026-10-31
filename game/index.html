@@ -838,6 +838,8 @@
       // online: JSON over WebSocket to the Scorched Tanks server
       const NET_BASE = "scorched-tanks.yishai-k.workers.dev";
       const GAME_VER = "1.15";
+      // online protocol revision, separate from GAME_VER: 1 = v1.15 and older (no proto param), 2 = rejoin tokens + room size
+      const NET_PROTO = 2;
       (function () {
         const store = {
           get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -852,6 +854,23 @@
         // a persistent player id keeps the seat across reconnects and visits
         let pid = store.get("st-pid");
         if (!pid || !/^[\w-]{6,64}$/.test(pid)) { pid = randomId(); store.set("st-pid", pid); }
+        // per-room rejoin tokens from the server's hello: proof that a seat is ours when we reconnect. Never shown or shared.
+        const TOK_KEY = "st-tok", TOK_TTL = 12 * 3600 * 1000;
+        function toks() {
+          let o = {};
+          try { o = JSON.parse(store.get(TOK_KEY) || "{}") || {}; } catch (e) {}
+          const now = Date.now();
+          Object.keys(o).forEach((c) => { if (!o[c] || !o[c].t || now - (o[c].at || 0) > TOK_TTL) delete o[c]; });
+          return o;
+        }
+        function tokFor(code) { const e = code && toks()[code]; return e ? e.t : ""; }
+        function tokKeep(code, t) {
+          if (!code || typeof t !== "string" || !/^[0-9a-f]{16,64}$/.test(t)) return;
+          const o = toks(); o[code] = { t, at: Date.now() };
+          const ks = Object.keys(o).sort((a, b) => o[b].at - o[a].at);
+          ks.slice(8).forEach((c) => delete o[c]);
+          store.set(TOK_KEY, JSON.stringify(o));
+        }
         const cleanName = (n) => String(n || "").replace(/\s+/g, " ").trim().slice(0, 16);
         let name = cleanName(store.get("st-name"));
         if (!name) { name = "Player" + String(Math.floor(Math.random() * 1000)).padStart(3, "0"); store.set("st-name", name); }
@@ -868,8 +887,10 @@
           try { ws.send(JSON.stringify(o)); return true; } catch (e) { return false; }
         }
         function url() {
-          const q = `?name=${encodeURIComponent(name)}&pid=${encodeURIComponent(pid)}&ver=${encodeURIComponent(GAME_VER)}`;
-          return kind === "quick" ? `wss://${NET_BASE}/ws/quick${q}` : `wss://${NET_BASE}/ws/room/${Net.code}${q}`;
+          const q = `?name=${encodeURIComponent(name)}&pid=${encodeURIComponent(pid)}&ver=${encodeURIComponent(GAME_VER)}&proto=${NET_PROTO}`;
+          if (kind === "quick") return `wss://${NET_BASE}/ws/quick${q}`;
+          const tok = tokFor(Net.code);
+          return `wss://${NET_BASE}/ws/room/${Net.code}${q}${tok ? "&tok=" + encodeURIComponent(tok) : ""}`;
         }
         function stop() {
           want = false;
@@ -915,6 +936,8 @@
             case "hello":
               tries = 0;
               if (m.code) Net.code = m.code;
+              if (m.tok && kind === "room") tokKeep(Net.code, m.tok);
+              if (m.proto) Net.serverProto = m.proto | 0;
               emit("onHello", m);
               break;
             case "roster":
@@ -951,7 +974,7 @@
         window.addEventListener("online", () => { if (want && retryT) { clearTimeout(retryT); dial(); } });
 
         const Net = {
-          base: NET_BASE, pid, code: null, roster: null, host: null, open: false,
+          base: NET_BASE, pid, proto: NET_PROTO, serverProto: 0, code: null, roster: null, host: null, open: false,
           // hooks: onMsg(d, from), onRoster(roster), onHost(pid, snap), onErr(err), onHello, onQueue(n, startsIn), onMatched(code), onStatus(state, tries, max)
           onMsg: null, onRoster: null, onHost: null, onErr: null, onHello: null, onQueue: null, onMatched: null, onStatus: null,
           get name() { return name; },
@@ -3581,6 +3604,9 @@
         const dosAlert = (msg, fn) => dosDialog("ALERT", msg, [{ label: "OK", fn }]);
         function errText(m) {
           const s = String(m || "").toLowerCase();
+          if (/update/.test(s)) return "Please update Scorched Tanks to play online.";
+          if (/seat|belongs/.test(s)) return "That seat is in use by another player.";
+          if (/too many/.test(s)) return "Too many attempts. Wait a minute and try again.";
           if (/full/.test(s)) return "This room is full.";
           if (/start|playing|progress/.test(s)) return "This game has already started.";
           if (/not.?found|no.?such|unknown|exist|invalid/.test(s)) return "Room not found. Check the code.";
@@ -3813,7 +3839,7 @@
         queueFit();
         // versions: a roster entry without ver is an old client; never blocks play
         const verOf = (p) => (p && p.pid === Net.pid ? GAME_VER : p && typeof p.ver === "string" && p.ver ? p.ver : "old");
-        const verDiff = (p) => verOf(p) !== GAME_VER;
+        const verDiff = (p) => verOf(p) !== GAME_VER || (!!p && p.pid !== Net.pid && p.proto != null && p.proto !== NET_PROTO);
         const verLabel = (p) => { const v = verOf(p); return v === "old" ? "old" : /^v/i.test(v) ? v : "v" + v; };
         const mixedVersions = (list) => (list || []).some((p) => p.on !== false && verDiff(p));
         async function shareCode() {
