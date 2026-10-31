@@ -477,6 +477,45 @@
       .x-net-mix a { flex: 0 0 auto; display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px; color: #ffff55; font-weight: 700; letter-spacing: 0.08em; }
       #menu .x-panel { position: relative; }
       .x-ver { position: absolute; top: 10px; right: 14px; font-size: 12px !important; opacity: 0.75; }
+      /* maps: the picker and the full-screen builder */
+      .x-map-list li { gap: 10px; }
+      .x-map-list canvas { flex: 0 0 auto; width: 96px; height: 40px; border: 1px solid #303048; background: #05050c; }
+      .x-gm .x-map-list .x-map-use { flex: 1 1 auto; min-width: 0; min-height: 44px; display: flex; align-items: center; gap: 10px; padding: 2px 8px; text-align: left; font-size: 15px; background: transparent; color: #fff; border: 0; }
+      .x-gm .x-map-list .x-map-use.is-on { color: #ffff55; }
+      .x-gm .x-map-list .x-map-use span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .x-gm .x-map-list .x-map-del, .x-gm .x-map-list .x-map-edit { flex: 0 0 auto; min-height: 40px; padding: 0 8px; font-size: 13px; }
+      .x-map-ed { position: fixed; inset: 0; z-index: 9; display: flex; flex-direction: column; background: #0000a8; font-family: "Geist Mono", ui-monospace, monospace; color: #fff;
+        padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)); gap: 6px; box-sizing: border-box; }
+      .x-map-ed[hidden] { display: none; }
+      .x-map-top { display: flex; align-items: center; gap: 10px; }
+      .x-map-top b { font-weight: 400; color: #ffff55; letter-spacing: 0.12em; white-space: nowrap; }
+      .x-map-top input { flex: 1 1 auto; min-width: 0; min-height: 40px; padding: 4px 10px; font: inherit; font-size: 16px; color: #ffff55; background: #000; border-radius: 0; border: 2px solid; border-color: #404040 #fff #fff #404040; user-select: text; -webkit-user-select: text; }
+      .x-map-tools { display: flex; flex: 0 1 auto; gap: 4px; }
+      .x-map-tools button { min-height: 40px; min-width: 0; padding: 0 8px; font: inherit; font-size: 14px; color: #000; background: #c0c0c0; border-radius: 0; border: 2px solid; border-color: #fff #404040 #404040 #fff; }
+      .x-map-tools button.is-on { background: #ffff55; border-color: #404040 #fff #fff #404040; }
+      @media (max-width: 640px) { .x-map-top { flex-wrap: wrap; } .x-map-tools { flex: 1 1 100%; } .x-map-tools button { flex: 1 1 0; } }
+      .x-map-cv { position: relative; flex: 1 1 auto; min-height: 0; border: 2px solid; border-color: #404040 #fff #fff #404040; background: #000; touch-action: none; }
+      .x-map-cv canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+      .x-map-tip { position: absolute; top: 8px; left: 0; right: 0; margin: 0; text-align: center; font-size: 14px; color: #ffff55; pointer-events: none; }
+      .x-map-bar { display: flex; gap: 6px; }
+      .x-map-bar button { flex: 1 1 0; min-height: 48px; font: inherit; font-size: 16px; letter-spacing: 0.06em; color: #000; background: #c0c0c0; border-radius: 0; border: 2px solid; border-color: #fff #404040 #404040 #fff; }
+      .x-map-bar button:active { border-color: #404040 #fff #fff #404040; }
+      .x-map-bar .x-map-save { background: #c00000; color: #fff; border-color: #ff7070 #500000 #500000 #ff7070; }
+      /* lobby match settings: the host edits, everyone else sees them */
+      .x-net-cfg { background: #000; color: #fff; border: 2px solid; border-color: #404040 #fff #fff #404040; padding: 8px; display: flex; flex-direction: column; gap: 6px; }
+      .x-net-cfg-t { margin: 0; font: inherit; font-size: 13px; letter-spacing: 0.12em; color: #ffff55; text-align: left; }
+      .x-net-cfg-t small { font-size: 12px; letter-spacing: 0.04em; color: #9a9ab8; }
+      .x-net-cfg-g { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+      .x-net-cfg-g .x-ncs { grid-column: 1 / -1; display: flex; align-items: center; gap: 6px; }
+      .x-net-cfg-g .x-ncs > span { flex: 1 1 auto; text-align: left; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: #9a9ab8; }
+      .x-net-cfg-g .x-ncs > b { flex: 0 0 auto; min-width: 84px; text-align: center; font-size: 17px; color: #fff; font-weight: 400; }
+      .x-gm .x-net-cfg-g button { min-height: 44px; padding: 2px 6px; font-size: 15px; letter-spacing: 0.02em; }
+      .x-gm .x-net-cfg-g .x-ncs button { flex: 0 0 48px; font-size: 22px; line-height: 1; }
+      .x-gm .x-net-cfg-g .x-nco { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; text-align: left; }
+      .x-net-cfg-g .x-nco small { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #303030; }
+      .x-net-cfg-g div.x-nco { min-height: 40px; padding: 2px 8px; border: 1px solid #303048; color: #fff; display: flex; flex-direction: column; justify-content: center; text-align: left; font-size: 15px; }
+      .x-net-cfg-g div.x-nco small { color: #9a9ab8; }
+      .x-net-cfg-w { grid-column: 1 / -1; margin: 0; font-size: 14px; color: #9a9ab8; text-align: center; }
       .x-net-list li.is-off { color: #7a7a7a; }
       .x-net-list li.is-off .x-net-sw { opacity: 0.35; border-color: #7a7a7a; }
       .x-net-list li.is-off .x-net-badge { background: #7a7a7a; }
@@ -607,6 +646,10 @@
               <h2 class="x-net-room" id="nlRoom">ROOM <b id="nlCode">----</b></h2>
               <button id="nlShare">SHARE</button>
               <ul class="x-net-list" id="nlList" aria-label="Players"></ul>
+              <section class="x-net-cfg" aria-labelledby="nlCfgT">
+                <h3 class="x-net-cfg-t" id="nlCfgT">MATCH SETTINGS <small id="nlCfgWho"></small></h3>
+                <div class="x-net-cfg-g" id="nlCfg"></div>
+              </section>
               <p class="x-net-q x-net-hot x-net-mix" id="nlMix" role="status" hidden><span>Some players have a different version - the game may go out of sync.</span><a href="https://scorched-tanks.yishai-k.workers.dev/" target="_blank" rel="noopener">UPDATE</a></p>
               <button class="x-net-tog" id="nlPub" role="switch" aria-checked="false" hidden><i id="nlPubBox">[ ]</i>Fill empty seats with strangers</button>
               <button class="x-net-start" id="nlStart" hidden disabled>START GAME</button>
@@ -627,6 +670,32 @@
           </div>
         </div>
         <p class="x-net-toast" id="netToast" role="status" hidden></p>
+        <div class="x-gm x-net x-map-pick" id="mapPick" role="dialog" aria-modal="true" aria-labelledby="mpBar" hidden>
+          <div class="x-gm-box">
+            <div class="x-gm-bar" id="mpBar">MAPS</div>
+            <div class="x-gm-body">
+              <ul class="x-net-list x-map-list" id="mpList" aria-label="Maps"></ul>
+              <button id="mpNew">+ DRAW A NEW MAP</button>
+              <button id="mpClose">CLOSE</button>
+            </div>
+          </div>
+        </div>
+        <div class="x-map-ed" id="mapEd" role="dialog" aria-modal="true" aria-label="Map builder" hidden>
+          <div class="x-map-top">
+            <b>MAP BUILDER</b>
+            <input id="meName" maxlength="16" placeholder="Map name" aria-label="Map name" autocomplete="off">
+            <div class="x-map-tools" id="meTools" role="group" aria-label="Tool">
+              <button data-tool="draw" class="is-on" aria-pressed="true">DRAW</button><button data-tool="0" aria-pressed="false">TREE</button><button data-tool="1" aria-pressed="false">BUSH</button><button data-tool="2" aria-pressed="false">WRECK</button>
+            </div>
+          </div>
+          <div class="x-map-cv"><canvas id="meCv"></canvas><p class="x-map-tip" id="meTip">Draw the ground with your finger</p></div>
+          <div class="x-map-bar">
+            <button id="meFlat">CLEAR</button>
+            <button id="meSmooth">SMOOTH</button>
+            <button id="meCancel">CANCEL</button>
+            <button id="meSave" class="x-map-save">SAVE</button>
+          </div>
+        </div>
         <div class="x-overlay" id="setup" hidden>
           <div class="x-panel x-setup">
             <h1>Match setup</h1>
@@ -749,6 +818,7 @@
                 <div class="x-gm-row"><span>Wind · from next turn</span><div class="x-gm-seg" data-gs="wind"><button data-v="None">NONE</button><button data-v="Normal">NORMAL</button><button data-v="Strong">STRONG</button><button data-v="Changing">CHANGING</button></div></div>
                 <div class="x-gm-row"><span>Aim hint</span><div class="x-gm-seg" data-gs="hint"><button data-v="on">ON</button><button data-v="off">OFF</button></div></div>
                 <div class="x-gm-row"><span>Trajectory tracers</span><div class="x-gm-seg" data-gs="tracers"><button data-v="on">ON</button><button data-v="off">OFF</button></div></div>
+                <div class="x-gm-row"><span>Graphics</span><div class="x-gm-seg" data-gs="gfx"><button data-v="modern">MODERN</button><button data-v="classic">CLASSIC</button></div></div>
               </div>
               <button id="gmBack">BACK</button>
             </div>
@@ -767,7 +837,7 @@
     <script>
       // online: JSON over WebSocket to the Scorched Tanks server
       const NET_BASE = "scorched-tanks.yishai-k.workers.dev";
-      const GAME_VER = "1.12";
+      const GAME_VER = "1.15";
       (function () {
         const store = {
           get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -1013,6 +1083,11 @@
           { id: "horiz", name: "Horizontal Guidance", price: 10000, bundle: 2, guide: "horizontal", desc: "Steers the next shot sideways" },
           { id: "vert", name: "Vertical Guidance", price: 10000, bundle: 2, guide: "vertical", desc: "Steers the next shot up or down" },
         ];
+        // v1.14: prices are a tenth of the original, sold one unit at a time. pack = the original bundle, used by CPU shopping
+        [WEAPONS, ITEMS].forEach((list) => list.forEach((x) => {
+          if (!x.price) return;
+          x.pack = x.bundle; x.price = Math.max(1, Math.round(x.price / 10 / x.bundle)); x.bundle = 1;
+        }));
         const IX = (id) => ITEMS.findIndex((it) => it.id === id);
         const CHUTE = IX("chute"), BATT = IX("battery"), FUEL = IX("fuel"), CONTACT = IX("contact");
         const SHIELDS = [IX("shield"), IX("force"), IX("heavy")];
@@ -1022,7 +1097,7 @@
         const money = (n) => "$" + Math.round(n).toLocaleString("en-US");
         // online names are typed by players, so they are escaped wherever they go into HTML
         const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-        const cfg = { rounds: 3, cash: 10000, wind: "Normal", walls: "Open", terrain: "Random", gravity: "Normal", sky: "Gradient" };
+        const cfg = { rounds: 3, cash: 10000, wind: "Normal", walls: "Open", terrain: "Random", gravity: "Normal", sky: "Gradient", map: null };
         // match options: cycled on the setup screen
         const OPTS = {
           wind: ["None", "Normal", "Strong", "Changing"],
@@ -1075,6 +1150,16 @@
           while (out.length < 2) out.push(def[out.length] || "Shooter");
           return out;
         }
+        // a drawn map: {n: name, h: MAP_N heights, 0-100 = share of the max ground height}; anything else is "no map"
+        const MAP_N = 160;
+        function cleanMap(m) {
+          if (!m || typeof m !== "object" || !Array.isArray(m.h) || m.h.length !== MAP_N) return null;
+          const h = m.h.map((v) => Math.max(0, Math.min(100, Math.round(+v) || 0)));
+          // d: placed decor as [column 0-159, type 0 tree / 1 bush / 2 wreck], at most 40
+          const d = (Array.isArray(m.d) ? m.d : []).filter((e) => Array.isArray(e) && e[0] >= 0 && e[0] < MAP_N && [0, 1, 2].includes(e[1]))
+            .slice(0, 40).map((e) => [Math.round(e[0]), e[1]]);
+          return { n: String(m.n || "Map").replace(/[<>&"]/g, "").slice(0, 16) || "Map", h, d };
+        }
         function cleanCfg(c) {
           const o = Object.assign({}, CFG0);
           if (!c || typeof c !== "object") return o;
@@ -1083,6 +1168,7 @@
           const cash = +c.cash;
           if (cash >= 0 && cash <= 100000 && cash % 5000 === 0) o.cash = cash;
           Object.keys(OPTS).forEach((k) => { if (OPTS[k].includes(c[k])) o[k] = c[k]; });
+          o.map = cleanMap(c.map);
           return o;
         }
         // reads the saved setup into cfg (and the per-mode slots); bad or missing values fall back to the defaults
@@ -1370,8 +1456,67 @@
             dirty.x1 = Math.max(dirty.x1, x1); dirty.y1 = Math.max(dirty.y1, y1);
           }
         }
+        if (!CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
+        // v1.14 look: "modern" (grass edge, textured dirt, rocks, painted sky) or "classic" (the original flat colours)
+        let gfx = "modern";
+        try { if (localStorage.getItem("st-gfx") === "classic") gfx = "classic"; } catch (e) {}
+        function setGfx(v) { gfx = v === "classic" ? "classic" : "modern"; try { localStorage.setItem("st-gfx", gfx); } catch (e) {} skyKey = ""; if (TW) { dirty = { x0: 0, y0: 0, x1: TW, y1: TH }; } }
+        // cheap integer hash noise, stable per pixel so craters keep their texture
+        const hsh = (x, y) => { let h = (x * 374761393 + y * 668265263) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+        function vnoise(x, y, c) {
+          const gx = Math.floor(x / c), gy2 = Math.floor(y / c), fx = x / c - gx, fy = y / c - gy2;
+          const a = hsh(gx, gy2), b = hsh(gx + 1, gy2), d = hsh(gx, gy2 + 1), e = hsh(gx + 1, gy2 + 1);
+          const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+          return a + (b - a) * sx + (d - a) * sy + (a - b - d + e) * sx * sy;
+        }
+        function modernPx(m, x, y, depth) {
+          const n = hsh(x, y), k = Math.max(0, Math.min(1, (y - TH * 0.35) / (TH * 0.65)));
+          if (m === 3) { const v = 58 + vnoise(x, y, 6) * 40 + n * 14; return rgb(v * 0.92, v * 0.85, v * 0.8); }
+          if (m === 1 && depth <= 7) {
+            // the grass edge: a bright tip, then darker blades fading into the dirt
+            const tuft = hsh(x, 7) < 0.3 ? 1 : 0;
+            if (depth <= 1 + tuft) return rgb(150 + n * 40, 205 + n * 30, 80);
+            if (depth <= 4) return rgb(70 + n * 30, 140 + n * 30, 46);
+            if (depth <= 6) return rgb(64 + n * 20, 92 + n * 20, 34);
+            return rgb(84 + n * 16, 64 + n * 12, 34);
+          }
+          if (m === 1) {
+            // rocks: low-frequency blobs, shaded lighter on top
+            const cs = 16 * Math.max(1, S), cx = Math.floor(x / cs), cy = Math.floor(y / cs);
+            if (y > TH * 0.25 && hsh(cx, cy) < 0.16) {
+              const r = cs * (0.14 + 0.16 * hsh(cx + 31, cy)), ox = (cx + 0.3 + 0.4 * hsh(cx, cy + 77)) * cs, oy = (cy + 0.3 + 0.4 * hsh(cx + 5, cy + 9)) * cs;
+              const dx = (x - ox) / (r * 1.35), dy = (y - oy) / r, dd = dx * dx + dy * dy;
+              if (dd < 1) {
+                const v = (dd > 0.72 ? 52 : 96 - dy * 30) + n * 18;
+                return rgb(v * 1.02, v * 0.94, v * 0.86);
+              }
+            }
+            const st = 0.88 + 0.12 * Math.sin(y / (9 * Math.max(1, S)) + vnoise(x, 0, 40) * 6);
+            const base = (1 - k * 0.55) * st * (0.86 + n * 0.22);
+            return rgb(150 * base, 98 * base, 56 * base);
+          }
+          // added dirt: looser, sandier
+          const b2 = (1 - k * 0.4) * (0.85 + n * 0.25);
+          return rgb(176 * b2, 128 * b2, 74 * b2);
+        }
         function renderTerrain() {
           if (!dirty) return;
+          if (gfx === "modern") {
+            // the grass reaches 8px below a new surface, so the redraw extends past the change
+            const x0 = dirty.x0, x1 = dirty.x1, y0 = dirty.y0, y1 = Math.min(TH, dirty.y1 + 9);
+            for (let x = x0; x < x1; x++) {
+              const ys = Math.max(0, y0 - 9);
+              let depth = ys > 0 && mask[(ys - 1) * TW + x] ? 9 : 0;
+              for (let y = ys, i = ys * TW + x; y < y1; y++, i += TW) {
+                const m = mask[i];
+                if (!m || m === 3) depth = 0; else depth++;
+                if (y >= y0) d32[i] = m ? modernPx(m, x, y, depth) : 0;
+              }
+            }
+            tctx.putImageData(img, 0, 0, x0, y0, x1 - x0, y1 - y0);
+            dirty = null;
+            return;
+          }
           const { x0, y0, x1, y1 } = dirty;
           for (let y = y0; y < y1; y++) {
             const row = y * TW, c1 = pal1[y], c2 = pal2[y];
@@ -1409,10 +1554,14 @@
           const jag = kind === "Jagged" ? spikes(Math.max(10, 18 * S), 0.12, 0.62) : null;
           // a tall portrait stage keeps the ground in its lower part: heights follow a wide-ish reference, not the full height
           const HH = Math.min(H, Math.max(W * 0.9, H * 0.6));
+          const mp = state !== "menu" && cfg.map && cfg.map.h ? cfg.map.h : null;
           for (let x = 0; x < TW; x++) {
             const t = x / W;
             let h;
-            if (kind === "Flat") h = 0.25;
+            if (mp) {
+              const f = Math.min(MAP_N - 1, Math.max(0, t * (MAP_N - 1))), i0 = Math.floor(f), i1 = Math.min(MAP_N - 1, i0 + 1);
+              h = 0.03 + 0.69 * ((mp[i0] + (mp[i1] - mp[i0]) * (f - i0)) / 100);
+            } else if (kind === "Flat") h = 0.25;
             else if (kind === "Jagged") h = jag(x);
             else if (kind === "Mountains") {
               const b = 0.5 + 0.5 * Math.sin(t * 7 + p[0]), c = 0.5 + 0.5 * Math.sin(t * 11 + p[1]);
@@ -1421,7 +1570,7 @@
             else h = 0.28 + 0.12 * Math.sin(t * 5 + p[0]) + 0.06 * Math.sin(t * 13 + p[1]) + 0.02 * Math.sin(t * 31 + p[2]);
             setColumnTop(x, H - HH * Math.min(0.72, h));
           }
-          if (kind === "Cavern") {
+          if (kind === "Cavern" && !mp) {
             // a dirt ceiling band with a jagged underside
             const ceil = spikes(Math.max(8, 12 * S), 0.07, 0.17);
             for (let x = 0; x < TW; x++) {
@@ -1431,6 +1580,77 @@
           }
           settling = false;
           allocImage();
+          genDecor(mp ? cfg.map.d || [] : null);
+        }
+        // decor: trees, bushes and old wrecks standing on the ground. Looks only: shots pass through, a blast burns them.
+        // random decor comes from a hash of the terrain itself, so every online client gets the same set without using the game RNG
+        let decor = [];
+        const DECOR_T = ["tree", "bush", "wreck"];
+        function genDecor(placed) {
+          decor = [];
+          if (placed) {
+            placed.forEach(([i, t]) => decor.push({ x: ((i + 0.5) / MAP_N) * TW, t: DECOR_T[t], v: hsh(i, t), burnt: false }));
+            return;
+          }
+          let seed = 0;
+          for (let x = 0; x < TW; x += 7) seed = (seed * 31 + gy(x)) | 0;
+          const n = Math.round(TW / (70 * Math.max(1, S)));
+          for (let k = 0; k < n; k++) {
+            const r = hsh(seed, k), x = (0.03 + 0.94 * hsh(k, seed)) * TW;
+            if (gy(x) >= TH - 4) continue;
+            decor.push({ x, t: r < 0.5 ? "tree" : r < 0.85 ? "bush" : "wreck", v: hsh(seed + 1, k), burnt: false });
+          }
+        }
+        function burnDecor(x, y, r) {
+          decor.forEach((d) => {
+            const gy0 = gy(d.x), hgt = (d.t === "tree" ? 26 : 8) * S;
+            const dy = y < gy0 - hgt ? gy0 - hgt - y : y > gy0 ? y - gy0 : 0;
+            if (Math.abs(d.x - x) < r + 8 * S && dy < r + 6 * S) d.burnt = true;
+          });
+        }
+        function drawDecor() {
+          decor.forEach((d) => {
+            const y = gy(d.x);
+            if (y >= TH - 1) return;
+            const x = d.x, u = S * (0.85 + d.v * 0.4);
+            if (d.t === "tree") {
+              ctx.fillStyle = d.burnt ? "#1a1410" : "#5a3a20";
+              ctx.fillRect(x - 1.6 * u, y - 16 * u, 3.2 * u, 17 * u);
+              if (d.burnt) {
+                ctx.strokeStyle = "#1a1410"; ctx.lineWidth = 1.4 * u; ctx.lineCap = "round";
+                ctx.beginPath();
+                ctx.moveTo(x, y - 10 * u); ctx.lineTo(x - 6 * u, y - 17 * u);
+                ctx.moveTo(x, y - 13 * u); ctx.lineTo(x + 5 * u, y - 20 * u);
+                ctx.moveTo(x, y - 16 * u); ctx.lineTo(x - 2 * u, y - 23 * u);
+                ctx.stroke();
+                ctx.fillStyle = "#ff6a1a"; ctx.globalAlpha = 0.5 + 0.5 * Math.sin(performance.now() / 300 + d.v * 9);
+                ctx.fillRect(x - 0.8 * u, y - 9 * u, 1.6 * u, 1.6 * u); ctx.globalAlpha = 1;
+              } else {
+                const g1 = d.v < 0.5 ? "#2f6b2a" : "#3d7a2c", g2 = d.v < 0.5 ? "#4f9a3a" : "#68a83c";
+                ctx.fillStyle = g1;
+                [[0, -24, 8], [-6, -18, 6.5], [6, -18, 6.5], [0, -15, 6]].forEach(([dx, dy, r]) => { ctx.beginPath(); ctx.arc(x + dx * u, y + dy * u, r * u, 0, Math.PI * 2); ctx.fill(); });
+                ctx.fillStyle = g2;
+                [[-2, -26, 4], [-6, -20, 3], [3, -20, 3]].forEach(([dx, dy, r]) => { ctx.beginPath(); ctx.arc(x + dx * u, y + dy * u, r * u, 0, Math.PI * 2); ctx.fill(); });
+              }
+            } else if (d.t === "bush") {
+              const cs = d.burnt ? ["#1c1612", "#2c241c"] : ["#2e6a28", "#5a9c3a"];
+              [[-5, -3, 4.5, 0], [5, -3, 4.5, 0], [0, -5, 5.5, 0], [-2, -7, 2.6, 1], [3, -6, 2.4, 1]].forEach(([dx, dy, r, c]) => {
+                ctx.fillStyle = cs[c]; ctx.beginPath(); ctx.arc(x + dx * u, y + dy * u, r * u * (d.burnt ? 0.7 : 1), 0, Math.PI * 2); ctx.fill();
+              });
+            } else {
+              // a rusted wreck half sunk in the dirt, barrel snapped and drooping
+              ctx.save(); ctx.translate(x, y + 2 * u); ctx.rotate((d.v - 0.5) * 0.5); ctx.scale(1.3, 1.3);
+              ctx.fillStyle = d.burnt ? "#221a16" : "#4a3a30";
+              ctx.beginPath(); ctx.moveTo(-14 * u, 0); ctx.lineTo(-10 * u, -7 * u); ctx.lineTo(10 * u, -7 * u); ctx.lineTo(14 * u, 0); ctx.closePath(); ctx.fill();
+              ctx.fillStyle = d.burnt ? "#1a1412" : "#6a4630";
+              ctx.beginPath(); ctx.ellipse(-1 * u, -7 * u, 6 * u, 4 * u, 0, Math.PI, 0); ctx.fill();
+              ctx.strokeStyle = "#2a2220"; ctx.lineWidth = 2.4 * u; ctx.lineCap = "round";
+              ctx.beginPath(); ctx.moveTo(3 * u, -9 * u); ctx.lineTo(11 * u, -11 * u); ctx.lineTo(16 * u, -6 * u); ctx.stroke();
+              ctx.fillStyle = "#8a5a32"; ctx.globalAlpha = 0.6;
+              ctx.fillRect(-7 * u, -5 * u, 3 * u, 2 * u); ctx.fillRect(4 * u, -4 * u, 2 * u, 2 * u);
+              ctx.restore(); ctx.globalAlpha = 1;
+            }
+          });
         }
         function solid(x, y) {
           x = Math.round(x); y = Math.round(y);
@@ -1624,13 +1844,14 @@
         function cpuBuy(p) {
           // a parachute or shield first, sometimes, then batteries for low health
           const prot = [CHUTE].concat(SHIELDS).filter((k) => ITEMS[k].price <= p.cash);
-          if (prot.length && rnd() < 0.65) buyItem(p, prot[Math.floor(rnd() * prot.length)]);
-          if (p.items[BATT] < 3 && ITEMS[BATT].price <= p.cash && rnd() < 0.4) buyItem(p, BATT);
+          if (prot.length && rnd() < 0.65) { const k = prot[Math.floor(rnd() * prot.length)]; for (let n = 0; n < (ITEMS[k].pack || 1); n++) buyItem(p, k); }
+          if (p.items[BATT] < 3 && ITEMS[BATT].price <= p.cash && rnd() < 0.4) for (let n = 0; n < 3; n++) buyItem(p, BATT);
           const items = WEAPONS.map((w, i) => i).filter((i) => WEAPONS[i].price && CPU_KINDS.includes(WEAPONS[i].kind));
           for (let k = 0; k < 12; k++) {
             const ok = items.filter((i) => WEAPONS[i].price <= p.cash);
             if (!ok.length || (k > 0 && rnd() < 0.2)) break;
-            buy(p, ok[Math.floor(rnd() * ok.length)]);
+            const wi = ok[Math.floor(rnd() * ok.length)];
+            for (let n = 0; n < (WEAPONS[wi].pack || 1); n++) buy(p, wi);
           }
         }
         function renderShop() {
@@ -1644,7 +1865,7 @@
           shopEl.querySelectorAll("[data-tab]").forEach((b) => b.classList.toggle("is-on", b.dataset.tab === shopTab));
           if (shopTab === "m") {
             shopList.innerHTML = ITEMS.map((it, k) =>
-              `<div class="x-shop-row"><div class="x-shop-name">${it.name}<small>${money(it.price)} for ${it.bundle} · ${it.desc}</small></div>` +
+              `<div class="x-shop-row"><div class="x-shop-name">${it.name}<small>${money(it.price)} each · ${it.desc}</small></div>` +
               `<div class="x-shop-own">Own ${p.items[k]}</div>` +
               `<button data-ibuy="${k}"${p.cash < it.price ? " disabled" : ""}>BUY</button>` +
               `<button data-isell="${k}"${p.items[k] <= 0 ? " disabled" : ""}>SELL</button></div>`
@@ -1654,7 +1875,7 @@
           }
           shopList.innerHTML = WEAPONS.map((w, i) => {
             const own = p.stock[i] < 0 ? "∞" : p.stock[i];
-            const price = w.price ? `${money(w.price)} for ${w.bundle}` : "Free, unlimited";
+            const price = w.price ? `${money(w.price)} each` : "Free, unlimited";
             return `<div class="x-shop-row"><div class="x-shop-name">${w.name}<small>${price}</small></div>` +
               `<div class="x-shop-own">Own ${own}</div>` +
               `<button data-buy="${i}"${!w.price || p.cash < w.price ? " disabled" : ""}>BUY</button>` +
@@ -2096,6 +2317,7 @@
           booms.push({ x, y, r, t: 0, dur: 0.45 + r0 / 110, pal: opt.funky ? FUNKY_COLORS : BOOM_COLORS, off: Math.floor(rnd() * 7) });
           sfx.boom(r0);
           clearCircle(x, y, r);
+          burnDecor(x, y, r);
           settleCols(x - r, x + r);
           for (const t of tanks) {
             const d = Math.hypot(t.x - x, t.y - 5 * S - y);
@@ -2488,18 +2710,140 @@
           ctx.restore();
           ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         }
+        // the modern sky: a painted backdrop (sunset, night or dusk) with layered hazy hills, cached per world size and sky
+        const skyCv = document.createElement("canvas");
+        let skyKey = "";
+        function ridge(c, w, h, base, amp, freq, seed, col) {
+          const yAt = (x) => { const t = x / w; return base - amp * (0.55 * Math.pow(0.5 + 0.5 * Math.sin(t * freq + seed), 2) + 0.3 * (0.5 + 0.5 * Math.sin(t * freq * 2.3 + seed * 1.7)) + 0.15 * vnoise(x, seed * 100, 18)); };
+          c.beginPath(); c.moveTo(0, h);
+          for (let x = 0; x <= w; x += 3) c.lineTo(x, yAt(x));
+          c.lineTo(w, h); c.closePath(); c.fillStyle = col; c.fill();
+          return yAt;
+        }
+        // far silhouettes on a ridge: pines, round trees and old wrecked tanks with broken barrels
+        function ridgeProps(c, w, yAt, sc, col, seed, wrecks) {
+          c.fillStyle = col; c.strokeStyle = col; c.lineCap = "round";
+          for (let x = 6; x < w; x += 9 * sc + hsh(x, seed) * 30 * sc) {
+            const y = yAt(x) + 1, r = hsh(seed, x);
+            if (r < 0.45) { c.beginPath(); c.moveTo(x - 3 * sc, y); c.lineTo(x, y - (9 + r * 10) * sc); c.lineTo(x + 3 * sc, y); c.fill(); }
+            else if (r < 0.6) { c.beginPath(); c.arc(x, y - 5 * sc, 4 * sc, 0, Math.PI * 2); c.fill(); c.fillRect(x - 0.6 * sc, y - 3 * sc, 1.2 * sc, 3 * sc); }
+          }
+          for (let k = 0; k < wrecks; k++) {
+            const x = (0.12 + 0.76 * hsh(k, seed + 3)) * w, y = yAt(x) + 1.5 * sc, tilt = (hsh(k, seed + 4) - 0.5) * 0.5;
+            c.save(); c.translate(x, y); c.rotate(tilt);
+            c.beginPath(); c.moveTo(-9 * sc, 0); c.lineTo(-6 * sc, -4.5 * sc); c.lineTo(6 * sc, -4.5 * sc); c.lineTo(9 * sc, 0); c.fill();
+            c.beginPath(); c.ellipse(0, -4.5 * sc, 4 * sc, 2.8 * sc, 0, Math.PI, 0); c.fill();
+            c.lineWidth = 1.4 * sc; c.beginPath(); c.moveTo(2 * sc, -6 * sc); c.lineTo(7 * sc, -7 * sc); c.lineTo(10 * sc, -3 * sc); c.stroke();
+            c.restore();
+          }
+        }
+        function paintSky(kind) {
+          const key = `${W}x${H}:${kind}:${dpr}`;
+          if (key === skyKey) return;
+          skyKey = key;
+          const q = Math.min(2, dpr), w = Math.ceil(W), h = Math.ceil(H);
+          skyCv.width = Math.ceil(w * q); skyCv.height = Math.ceil(h * q);
+          const c = skyCv.getContext("2d");
+          c.setTransform(q, 0, 0, q, 0, 0);
+          const night = kind === "Stars", dark = kind === "Black";
+          const g = c.createLinearGradient(0, 0, 0, h);
+          if (night) { g.addColorStop(0, "#03040e"); g.addColorStop(0.6, "#0b1236"); g.addColorStop(1, "#1d2550"); }
+          else if (dark) { g.addColorStop(0, "#050508"); g.addColorStop(1, "#1a1420"); }
+          else { g.addColorStop(0, "#1b2a78"); g.addColorStop(0.35, "#4b3a8e"); g.addColorStop(0.62, "#d2604a"); g.addColorStop(0.8, "#f59a4a"); g.addColorStop(1, "#ffd27a"); }
+          c.fillStyle = g; c.fillRect(0, 0, w, h);
+          const sunX = w * 0.74, sunY = h * 0.42, R = Math.min(w, h) * 0.065;
+          if (!dark) {
+            // sun (or moon) with a soft glow
+            const gl = c.createRadialGradient(sunX, sunY, R * 0.5, sunX, sunY, R * 6);
+            gl.addColorStop(0, night ? "rgba(200,210,255,0.35)" : "rgba(255,230,150,0.7)"); gl.addColorStop(1, "rgba(255,200,120,0)");
+            c.fillStyle = gl; c.fillRect(0, 0, w, h);
+            c.fillStyle = night ? "#e8ecff" : "#fff1b8"; c.beginPath(); c.arc(sunX, sunY, night ? R * 0.6 : R, 0, Math.PI * 2); c.fill();
+          }
+          if (night) {
+            c.fillStyle = "#fff";
+            stars.forEach(([x, y, r, a]) => { c.globalAlpha = a; c.fillRect(Math.round(x * w), Math.round(y * h * 0.75), r, r); });
+            c.globalAlpha = 1;
+          } else if (!dark) {
+            // long sunset clouds
+            for (let i = 0; i < 7; i++) {
+              const cx = hsh(i, 1) * w, cy = h * (0.08 + hsh(i, 2) * 0.32), cw = w * (0.07 + hsh(i, 3) * 0.12), ch = Math.max(3, h * 0.014);
+              const lo = cy > h * 0.24;
+              for (let k = 0; k < 5; k++) {
+                c.fillStyle = lo ? `rgba(255,${150 + k * 12},${100 + k * 10},${0.22 + k * 0.05})` : `rgba(${150 + k * 15},${100 + k * 12},${160 + k * 6},${0.18 + k * 0.05})`;
+                c.beginPath(); c.ellipse(cx + (hsh(i, k + 4) - 0.5) * cw * 0.8, cy - k * ch * 0.25, cw * (0.5 - k * 0.07), ch * (1.1 - k * 0.12), 0, 0, Math.PI * 2); c.fill();
+              }
+            }
+          }
+          // hazy hills, far to near
+          const hills = night ? ["#151a3c", "#10142e", "#0b0e22"] : dark ? ["#16121c", "#110e16", "#0c0a10"] : ["#8a5a8e", "#5c3e78", "#3a2a5a"];
+          const sc = Math.max(0.7, Math.min(w, h) / 400);
+          ridge(c, w, h, h * 0.62, h * 0.22, 7, 1.3, hills[0]);
+          const y2 = ridge(c, w, h, h * 0.72, h * 0.16, 11, 4.1, hills[1]);
+          ridgeProps(c, w, y2, sc, hills[1], 11, 1);
+          const y3 = ridge(c, w, h, h * 0.82, h * 0.12, 17, 2.7, hills[2]);
+          ridgeProps(c, w, y3, sc * 1.5, hills[2], 23, 2);
+          if (!dark && !night) {
+            // a little mist at the horizon line
+            const m = c.createLinearGradient(0, h * 0.6, 0, h);
+            m.addColorStop(0, "rgba(255,180,140,0)"); m.addColorStop(1, "rgba(255,170,130,0.25)");
+            c.fillStyle = m; c.fillRect(0, h * 0.6, w, h * 0.4);
+          }
+        }
+        // a dead tank smokes: puffs rise and fade on a loop, from the time alone
+        function drawSmoke(t, i) {
+          const now = performance.now() / 1000;
+          for (let k = 0; k < 6; k++) {
+            const ph = (now * 0.35 + k / 6 + i * 0.13) % 1;
+            const r = (3 + ph * 9) * S, y = t.y - 6 * S - ph * 46 * S, x = t.x + Math.sin(ph * 5 + k) * 4 * S + ph * wind * 0.8 * S;
+            ctx.globalAlpha = 0.45 * (1 - ph);
+            ctx.fillStyle = k % 2 ? "#3a3a3a" : "#555";
+            ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+          }
+          ctx.globalAlpha = 1;
+        }
+        // the modern tank: tracks with road wheels, a sloped hull, a domed turret and a long barrel
+        function drawTankModern(t) {
+          const m = muzzle(t), u = S, x = t.x, y = t.y;
+          ctx.lineCap = "round";
+          ctx.strokeStyle = "#141414"; ctx.lineWidth = 4 * u;
+          ctx.beginPath(); ctx.moveTo(x, y - 8 * u); ctx.lineTo(m.x, m.y); ctx.stroke();
+          ctx.strokeStyle = "#5a5a5a"; ctx.lineWidth = 1.6 * u;
+          ctx.beginPath(); ctx.moveTo(x, y - 8 * u); ctx.lineTo(m.x, m.y); ctx.stroke();
+          // tracks
+          ctx.fillStyle = "#1a1a1a";
+          ctx.beginPath(); ctx.roundRect(x - 13 * u, y - 5 * u, 26 * u, 6 * u, 3 * u); ctx.fill();
+          ctx.fillStyle = "#6a6a6a";
+          for (let k = -2; k <= 2; k++) { ctx.beginPath(); ctx.arc(x + k * 5 * u, y - 2 * u, 1.7 * u, 0, Math.PI * 2); ctx.fill(); }
+          // hull
+          const hg = ctx.createLinearGradient(0, y - 11 * u, 0, y - 4 * u);
+          hg.addColorStop(0, "#fff"); hg.addColorStop(0.25, t.color); hg.addColorStop(1, "#000");
+          ctx.fillStyle = t.color;
+          ctx.beginPath(); ctx.moveTo(x - 14 * u, y - 5 * u); ctx.lineTo(x - 10 * u, y - 10 * u); ctx.lineTo(x + 10 * u, y - 10 * u); ctx.lineTo(x + 14 * u, y - 5 * u); ctx.closePath(); ctx.fill();
+          ctx.globalAlpha *= 0.35; ctx.fillStyle = hg; ctx.fill(); ctx.globalAlpha = t.health <= 0 ? 0.4 : 1;
+          // turret
+          ctx.fillStyle = t.color;
+          ctx.beginPath(); ctx.ellipse(x, y - 10 * u, 6.5 * u, 4.5 * u, 0, Math.PI, 0); ctx.fill();
+          ctx.fillStyle = "rgba(255,255,255,0.35)";
+          ctx.beginPath(); ctx.ellipse(x - 1.5 * u, y - 12 * u, 3 * u, 1.4 * u, 0, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = "rgba(0,0,0,0.55)"; ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(x - 14 * u, y - 5 * u); ctx.lineTo(x - 10 * u, y - 10 * u); ctx.lineTo(x + 10 * u, y - 10 * u); ctx.lineTo(x + 14 * u, y - 5 * u); ctx.stroke();
+        }
         function drawWorld() {
           if (state === "title") return drawTitle();
           const skyKind = state === "menu" ? "Gradient" : rSky;
-          if (skyKind === "Gradient") {
+          if (gfx === "modern") {
+            paintSky(skyKind);
+            ctx.imageSmoothingEnabled = true;
+            ctx.drawImage(skyCv, 0, 0, Math.ceil(W), Math.ceil(H));
+          } else if (skyKind === "Gradient") {
             const sky = ctx.createLinearGradient(0, 0, 0, H);
             sky.addColorStop(0, "#0b1440");
             sky.addColorStop(0.55, "#5a3c8c");
             sky.addColorStop(1, "#f08a4b");
             ctx.fillStyle = sky;
           } else ctx.fillStyle = "#000";
-          ctx.fillRect(0, 0, W, H);
-          if (skyKind === "Stars") {
+          if (gfx !== "modern") ctx.fillRect(0, 0, W, H);
+          if (skyKind === "Stars" && gfx !== "modern") {
             ctx.fillStyle = "#fff";
             stars.forEach(([x, y, r, a]) => { ctx.globalAlpha = a; ctx.fillRect(Math.round(x * W), Math.round(y * H), r, r); });
             ctx.globalAlpha = 1;
@@ -2508,10 +2852,16 @@
           renderTerrain();
           ctx.imageSmoothingEnabled = false;
           ctx.drawImage(tcv, 0, 0, TW, TH);
+          if (gfx === "modern") drawDecor();
           if (state === "menu") return;
           // tanks
           tanks.forEach((t, i) => {
             if (t.health <= 0) ctx.globalAlpha = 0.4;
+            if (gfx === "modern") {
+              drawTankModern(t);
+              ctx.globalAlpha = 1;
+              if (t.health <= 0) drawSmoke(t, i);
+            } else {
             const m = muzzle(t);
             ctx.strokeStyle = "#222"; ctx.lineWidth = 3 * S; ctx.lineCap = "round";
             ctx.beginPath(); ctx.moveTo(t.x, t.y - 7 * S); ctx.lineTo(m.x, m.y); ctx.stroke();
@@ -2520,6 +2870,7 @@
             ctx.fillRect(t.x - 11 * S, t.y - 6 * S, 22 * S, 6 * S);
             ctx.fillStyle = "#222";
             ctx.fillRect(t.x - 11 * S, t.y - 1.5 * S, 22 * S, 2 * S);
+            }
             ctx.globalAlpha = 1;
             // parachute canopy and lines
             if (t.chute) {
@@ -2759,11 +3110,13 @@
           ).join("");
           slotsEl.scrollTop = st;
           optsEl.innerHTML = Object.keys(OPTS).map((k) =>
-            `<button data-opt="${k}" aria-label="${OPT_NAMES[k]}: ${cfg[k]}"><small>${OPT_NAMES[k]}</small>${cfg[k]}</button>`
-          ).join("");
+            `<button data-opt="${k}" aria-label="${OPT_NAMES[k]}: ${cfg[k]}"><small>${OPT_NAMES[k]}${k === "terrain" && cfg.map ? " (map on)" : ""}</small>${cfg[k]}</button>`
+          ).join("") + `<button data-gfx aria-label="Graphics: ${gfx}"><small>Graphics</small>${gfx === "modern" ? "Modern" : "Classic"}</button>` + `<button data-map aria-label="Map: ${cfg.map ? escHtml(cfg.map.n) : "Generated"}"><small>Map</small>${cfg.map ? escHtml(cfg.map.n) : "Generated"}</button>`;
         }
         const optsEl = document.getElementById("opts");
         optsEl.addEventListener("click", (e) => {
+          if (e.target.closest("[data-gfx]")) { setGfx(gfx === "modern" ? "classic" : "modern"); renderSetup(); return; }
+          if (e.target.closest("[data-map]")) { openMapPick((m) => { cfg.map = m; saveSetup(mode); renderSetup(); }); return; }
           const b = e.target.closest("[data-opt]");
           if (!b) return;
           const k = b.dataset.opt, list = OPTS[k];
@@ -2841,7 +3194,33 @@
           const d = dragScroll(o);
           o.addEventListener("click", (e) => { if (d.moved) { e.stopPropagation(); e.preventDefault(); d.moved = false; } }, true);
         });
+        // press and hold BUY or SELL to repeat, faster the longer it is held; the release click is then swallowed
+        let shopHoldT = null, shopHoldFired = false;
+        function shopAct(d) {
+          if (d.buy !== undefined) buy(shopP, +d.buy);
+          if (d.sell !== undefined) sell(shopP, +d.sell);
+          if (d.ibuy !== undefined) buyItem(shopP, +d.ibuy);
+          if (d.isell !== undefined) sellItem(shopP, +d.isell);
+        }
+        function shopHoldStop() { clearTimeout(shopHoldT); shopHoldT = null; }
+        shopList.addEventListener("pointerdown", (e) => {
+          const b = e.target.closest("[data-buy],[data-sell],[data-ibuy],[data-isell]");
+          if (!b || b.disabled || !shopP) return;
+          const d = Object.assign({}, b.dataset);
+          shopHoldFired = false; shopHoldStop();
+          let n = 0;
+          const tick = () => {
+            if (shopDrag.moved || !shopP) return shopHoldStop();
+            const before = shopP.cash;
+            shopAct(d); n++; shopHoldFired = true; renderShop();
+            if (shopP.cash === before) return shopHoldStop();
+            shopHoldT = setTimeout(tick, Math.max(35, 150 - n * 10));
+          };
+          shopHoldT = setTimeout(tick, 380);
+        });
+        ["pointerup", "pointercancel", "pointerleave"].forEach((ev) => shopList.addEventListener(ev, shopHoldStop));
         shopList.addEventListener("click", (e) => {
+          if (shopHoldFired) { shopHoldFired = false; e.stopPropagation(); return; }
           const b = e.target.closest("button");
           if (!b || shopDrag.moved || !shopP) return;
           const d = b.dataset;
@@ -2990,7 +3369,7 @@
             if (!ts[d.turn]) throw new Error("bad turn");
             // everything checks out: apply it
             cpuCancel(); resetFF();
-            Object.assign(cfg, d.cfg);
+            cfg.map = null; Object.assign(cfg, d.cfg); cfg.map = cleanMap(cfg.map);
             slots = Array.isArray(d.slots) ? d.slots.slice() : ps.map((p) => p.type);
             if (d.mode) mode = d.mode;
             players = ps; tanks = ts;
@@ -3005,6 +3384,7 @@
             hud.hidden = false; controls.hidden = false; measure();
             mask = m; TW = d.TW; TH = d.TH;
             allocImage(); settling = false;
+            genDecor(cfg.map ? cfg.map.d || [] : null);
             // the saved or host world keeps its exact size; a different screen letterboxes it instead of resampling
             setWorld(TW, TH);
             last = performance.now();
@@ -3102,7 +3482,7 @@
         };
         // settings
         function renderSettings() {
-          const cur = { sound: muted ? "off" : "on", speed: String(timeScale), wind: cfg.wind, hint: aimHint ? "on" : "off", tracers: showTracers ? "on" : "off" };
+          const cur = { sound: muted ? "off" : "on", speed: String(timeScale), wind: cfg.wind, hint: aimHint ? "on" : "off", tracers: showTracers ? "on" : "off", gfx };
           pauseEl.querySelectorAll("[data-gs]").forEach((g) => {
             g.querySelectorAll("button").forEach((b) => {
               const on = b.dataset.v === cur[g.dataset.gs];
@@ -3119,6 +3499,7 @@
           if (k === "speed") setSpeed(+v);
           if (k === "wind" && cfg.wind !== v) { cfg.wind = v; windDirty = true; }
           if (k === "hint") aimHint = v === "on";
+          if (k === "gfx") setGfx(v);
           if (k === "tracers") {
             showTracers = v === "on";
             try { localStorage.setItem("st-tracers", showTracers ? "1" : "0"); } catch (e) {}
@@ -3227,6 +3608,7 @@
         // room lobby
         function enterLobby(code) {
           stopCountdown();
+          netLobbyCfg = null; netCfgInit = false;
           byId("nlCode").textContent = code || "----";
           netShow("lobby");
           renderLobby();
@@ -3237,6 +3619,7 @@
           if (!r) {
             nlList.innerHTML = `<li class="is-empty"><span class="x-net-nm">Connecting…</span></li>`;
             [nlPub, nlStart, byId("nlNeed"), byId("nlWait")].forEach((o) => (o.hidden = true));
+            renderLobbyCfg(false);
             return;
           }
           const host = r.host === me;
@@ -3260,7 +3643,174 @@
           byId("nlNeed").hidden = !host || live >= 2;
           byId("nlWait").hidden = host;
           byId("nlMix").hidden = !mixedVersions(ps);
+          if (host) netCfgHostInit();
+          renderLobbyCfg(host);
         }
+        // lobby match settings. The host edits cfg here and relays it ({k:"cfg"}) on every change and roster update;
+        // guests only show it, and take it for real from the begin message as before. Kept in "st-online-cfg",
+        // apart from the local setup in "st-setup".
+        const NET_CFG_KEY = "st-online-cfg";
+        let netLobbyCfg = null, netCfgInit = false;
+        function netCfgSaved() { try { const r = localStorage.getItem(NET_CFG_KEY); return r ? cleanCfg(JSON.parse(r)) : null; } catch (e) { return null; } }
+        function netCfgStore() { try { const c = {}; Object.keys(CFG0).forEach((k) => (c[k] = cfg[k])); localStorage.setItem(NET_CFG_KEY, JSON.stringify(c)); } catch (e) {} }
+        function netCfgSend() { if (Net.isHost() && netView === "lobby") Net.send({ k: "cfg", cfg: cleanCfg(cfg) }); }
+        // the host's cfg: what this room last showed (after a host change), else this device's last online setup, else its local setup
+        function netCfgHostInit() {
+          if (netCfgInit) return;
+          netCfgInit = true;
+          Object.assign(cfg, netLobbyCfg || netCfgSaved() || cleanCfg(cfg));
+          netCfgSend();
+        }
+        function renderLobbyCfg(host) {
+          const box = byId("nlCfg");
+          byId("nlCfgWho").textContent = host ? "· you set them" : "· set by the host";
+          const c = host ? cfg : netLobbyCfg;
+          if (!c) { box.innerHTML = `<p class="x-net-cfg-w">Waiting for the host's settings…</p>`; return; }
+          const step = (lab, val, a, b, nm) => host
+            ? `<div class="x-ncs"><span>${lab}</span><button data-ncs="${a}" aria-label="Less ${nm}">−</button><b>${val}</b><button data-ncs="${b}" aria-label="More ${nm}">+</button></div>`
+            : `<div class="x-ncs"><span>${lab}</span><b>${val}</b></div>`;
+          box.innerHTML = step("Rounds", c.rounds, "r-", "r+", "rounds") + step("Starting cash", money(c.cash), "c-", "c+", "cash") +
+            Object.keys(OPTS).map((k) => host
+              ? `<button class="x-nco" data-nco="${k}" aria-label="${OPT_NAMES[k]}: ${c[k]}"><small>${OPT_NAMES[k]}</small>${c[k]}</button>`
+              : `<div class="x-nco"><small>${OPT_NAMES[k]}</small>${escHtml(c[k])}</div>`).join("") +
+            (host ? `<button class="x-nco" data-ncmap><small>Map</small>${c.map ? escHtml(c.map.n) : "Generated"}</button>`
+              : `<div class="x-nco"><small>Map</small>${c.map ? escHtml(c.map.n) : "Generated"}</div>`);
+        }
+        byId("nlCfg").addEventListener("click", (e) => {
+          if (!Net.isHost() || netView !== "lobby") return;
+          if (e.target.closest("[data-ncmap]")) { openMapPick((m) => { cfg.map = m; netCfgStore(); netCfgSend(); renderLobby(); }); return; }
+          const s = e.target.closest("[data-ncs]"), o = e.target.closest("[data-nco]");
+          if (s) {
+            const a = s.dataset.ncs;
+            if (a === "r-") cfg.rounds = Math.max(1, cfg.rounds - 1);
+            if (a === "r+") cfg.rounds = Math.min(10, cfg.rounds + 1);
+            if (a === "c-") cfg.cash = Math.max(0, cfg.cash - 5000);
+            if (a === "c+") cfg.cash = Math.min(100000, cfg.cash + 5000);
+          } else if (o) {
+            const k = o.dataset.nco, list = OPTS[k];
+            cfg[k] = list[(list.indexOf(cfg[k]) + 1) % list.length];
+          } else return;
+          netCfgStore(); netCfgSend(); renderLobby();
+        });
+        // ---- maps: saved in "st-maps" (up to 30); a chosen map rides in cfg.map, so online guests get it with the settings ----
+        const MAPS_KEY = "st-maps";
+        function mapsLoad() { try { const a = JSON.parse(localStorage.getItem(MAPS_KEY) || "[]"); return Array.isArray(a) ? a.map(cleanMap).filter(Boolean) : []; } catch (e) { return []; } }
+        function mapsSave(a) { try { localStorage.setItem(MAPS_KEY, JSON.stringify(a.slice(0, 30))); return true; } catch (e) { return false; } }
+        // draws heights as ground on a small canvas
+        function mapDraw(cv, h, big, dec) {
+          const w = cv.width, hh = cv.height, c = cv.getContext("2d");
+          const g = c.createLinearGradient(0, 0, 0, hh); g.addColorStop(0, "#1a1240"); g.addColorStop(1, "#c8603a");
+          c.fillStyle = g; c.fillRect(0, 0, w, hh);
+          const top = (v) => hh - hh * (0.03 + 0.69 * v / 100);
+          if (big) { c.strokeStyle = "#ffff5555"; c.setLineDash([8, 6]); c.beginPath(); c.moveTo(0, top(100)); c.lineTo(w, top(100)); c.stroke(); c.setLineDash([]); }
+          c.beginPath(); c.moveTo(0, hh);
+          for (let i = 0; i < MAP_N; i++) c.lineTo((i / (MAP_N - 1)) * w, top(h[i]));
+          c.lineTo(w, hh); c.closePath();
+          c.fillStyle = "#6b4a2b"; c.fill();
+          c.lineWidth = big ? 4 : 2; c.strokeStyle = "#6fbf3a"; c.stroke();
+          // decor markers: a tree, a bush, a wreck
+          const u = big ? Math.max(1.5, hh / 160) : 0.6;
+          (dec || []).forEach(([i, t]) => {
+            const x = ((i + 0.5) / MAP_N) * w, y = top(h[i]);
+            if (t === 0) { c.fillStyle = "#5a3a20"; c.fillRect(x - 1.5 * u, y - 12 * u, 3 * u, 12 * u); c.fillStyle = "#3d8a2c"; c.beginPath(); c.arc(x, y - 16 * u, 7 * u, 0, Math.PI * 2); c.fill(); }
+            else if (t === 1) { c.fillStyle = "#3d8a2c"; c.beginPath(); c.arc(x - 3 * u, y - 3 * u, 4 * u, 0, Math.PI * 2); c.arc(x + 3 * u, y - 3 * u, 4 * u, 0, Math.PI * 2); c.arc(x, y - 6 * u, 4.5 * u, 0, Math.PI * 2); c.fill(); }
+            else { c.fillStyle = "#4a3a30"; c.fillRect(x - 9 * u, y - 5 * u, 18 * u, 5 * u); c.beginPath(); c.arc(x, y - 5 * u, 4 * u, Math.PI, 0); c.fill(); c.strokeStyle = "#2a2220"; c.lineWidth = 2 * u; c.beginPath(); c.moveTo(x + 2 * u, y - 7 * u); c.lineTo(x + 9 * u, y - 9 * u); c.lineTo(x + 12 * u, y - 4 * u); c.stroke(); }
+          });
+        }
+        let mapPickCb = null;
+        function openMapPick(cb) { mapPickCb = cb; renderMapPick(); byId("mapPick").hidden = false; byId("mpClose").focus({ preventScroll: true }); }
+        function mapCurrent() { return mode === "online" || netView === "lobby" ? cfg.map : cfg.map; }
+        function renderMapPick() {
+          const list = mapsLoad(), cur = mapCurrent(), box = byId("mpList");
+          const same = (m) => cur && m && cur.n === m.n && cur.h.join() === m.h.join();
+          box.innerHTML = `<li><button class="x-map-use${cur ? "" : " is-on"}" data-mp="-1"><span>${cur ? "" : "► "}Generated (uses Terrain)</span></button></li>` +
+            list.map((m, i) => `<li><button class="x-map-use${same(m) ? " is-on" : ""}" data-mp="${i}"><canvas width="192" height="80" data-mpc="${i}"></canvas><span>${same(m) ? "► " : ""}${escHtml(m.n)}</span></button>` +
+              `<button class="x-map-edit" data-mpe="${i}" aria-label="Edit ${escHtml(m.n)}">EDIT</button><button class="x-map-del" data-mpd="${i}" aria-label="Delete ${escHtml(m.n)}">✕</button></li>`).join("");
+          box.querySelectorAll("[data-mpc]").forEach((cv) => mapDraw(cv, list[+cv.dataset.mpc].h, false, list[+cv.dataset.mpc].d));
+        }
+        byId("mpList").addEventListener("click", (e) => {
+          const list = mapsLoad();
+          const u = e.target.closest("[data-mp]"), d = e.target.closest("[data-mpd]"), ed = e.target.closest("[data-mpe]");
+          if (u) { const i = +u.dataset.mp; byId("mapPick").hidden = true; if (mapPickCb) mapPickCb(i < 0 ? null : list[i] || null); return; }
+          if (ed) { openMapEd(list[+ed.dataset.mpe], +ed.dataset.mpe); return; }
+          if (d) { const i = +d.dataset.mpd; dosDialog("CONFIRM", `Delete map "${list[i].n}"?`, [{ label: "KEEP" }, { label: "DELETE", red: true, fn: () => { list.splice(i, 1); mapsSave(list); renderMapPick(); } }]); }
+        });
+        byId("mpClose").onclick = () => (byId("mapPick").hidden = true);
+        byId("mpNew").onclick = () => openMapEd(null, -1);
+        // the builder: drag a finger to set the ground height under it; strokes join up so fast swipes leave no gaps
+        const meCv = byId("meCv");
+        let meH = null, meD = [], meIdx = -1, meLast = null, meTool = "draw";
+        function meSetTool(t) {
+          meTool = t;
+          byId("meTools").querySelectorAll("button").forEach((b) => { const on = b.dataset.tool === t; b.classList.toggle("is-on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); });
+          byId("meTip").textContent = t === "draw" ? "Draw the ground with your finger" : "Tap to place, tap one again to remove";
+        }
+        byId("meTools").addEventListener("click", (e) => { const b = e.target.closest("[data-tool]"); if (b) { meSetTool(b.dataset.tool); byId("meTip").hidden = false; } });
+        function meSize() { const r = meCv.getBoundingClientRect(), d = Math.min(2, window.devicePixelRatio || 1); meCv.width = Math.max(1, Math.round(r.width * d)); meCv.height = Math.max(1, Math.round(r.height * d)); meRender(); }
+        function meRender() { if (meH) mapDraw(meCv, meH, true, meD); }
+        function openMapEd(m, idx) {
+          meIdx = idx;
+          meH = m ? m.h.slice() : Array.from({ length: MAP_N }, (_, i) => Math.round(30 + 12 * Math.sin(i / 14)));
+          meD = m && m.d ? m.d.map((e) => e.slice()) : [];
+          meSetTool("draw");
+          byId("meName").value = m ? m.n : `Map ${mapsLoad().length + 1}`;
+          byId("meTip").hidden = false;
+          byId("mapEd").hidden = false;
+          requestAnimationFrame(meSize);
+        }
+        function mePoint(e) {
+          const r = meCv.getBoundingClientRect();
+          const fx = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)), fy = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
+          return [fx * (MAP_N - 1), Math.max(0, Math.min(100, Math.round(((1 - fy) - 0.03) / 0.69 * 100)))];
+        }
+        function mePaint(p) {
+          const a = meLast || p, n = Math.max(1, Math.ceil(Math.abs(p[0] - a[0])));
+          for (let k = 0; k <= n; k++) {
+            const t = k / n, x = Math.round(a[0] + (p[0] - a[0]) * t), v = Math.round(a[1] + (p[1] - a[1]) * t);
+            for (let dx = -1; dx <= 1; dx++) { const i = x + dx; if (i >= 0 && i < MAP_N) meH[i] = dx ? Math.round((meH[i] + v) / 2) : v; }
+          }
+          meLast = p; meRender();
+        }
+        meCv.addEventListener("pointerdown", (e) => {
+          e.preventDefault(); byId("meTip").hidden = true;
+          if (meTool !== "draw") {
+            const i = Math.round(mePoint(e)[0]), near = meD.findIndex((d) => Math.abs(d[0] - i) <= 3);
+            if (near >= 0) meD.splice(near, 1); else if (meD.length < 40) meD.push([i, +meTool]);
+            meRender(); return;
+          }
+          meCv.setPointerCapture(e.pointerId); meLast = null; mePaint(mePoint(e));
+        });
+        meCv.addEventListener("pointermove", (e) => { if (meLast) mePaint(mePoint(e)); });
+        ["pointerup", "pointercancel", "lostpointercapture"].forEach((ev) => meCv.addEventListener(ev, () => (meLast = null)));
+        window.addEventListener("resize", () => { if (!byId("mapEd").hidden) requestAnimationFrame(meSize); });
+        byId("meFlat").onclick = () => { meH = meH.map(() => 25); meD = []; meRender(); };
+        byId("meSmooth").onclick = () => { meH = meH.map((v, i) => Math.round(((meH[i - 1] ?? v) + v * 2 + (meH[i + 1] ?? v)) / 4)); meRender(); };
+        byId("meCancel").onclick = () => { byId("mapEd").hidden = true; };
+        byId("meSave").onclick = () => {
+          const m = cleanMap({ n: byId("meName").value.trim() || "Map", h: meH, d: meD });
+          const list = mapsLoad();
+          if (meIdx >= 0 && meIdx < list.length) list[meIdx] = m; else list.unshift(m);
+          if (!mapsSave(list)) { dosAlert("Could not save the map."); return; }
+          byId("mapEd").hidden = true;
+          renderMapPick();
+          netToast(`Map "${m.n}" saved`);
+        };
+        // button labels shrink to fit their button, so no label is ever clipped on a small screen.
+        // runs after any change to the page (debounced to one pass a frame) and on resize
+        let fitQueued = false;
+        function fitButtons() {
+          fitQueued = false;
+          document.querySelectorAll("button").forEach((b) => {
+            if (b.offsetParent === null || !b.textContent.trim()) return;
+            if (b.style.fontSize) b.style.fontSize = "";
+            let fs = parseFloat(getComputedStyle(b).fontSize) || 14, n = 0;
+            while (b.scrollWidth > b.clientWidth + 1 && fs > 8 && n++ < 14) { fs -= 1; b.style.fontSize = fs + "px"; }
+          });
+        }
+        function queueFit() { if (!fitQueued) { fitQueued = true; requestAnimationFrame(fitButtons); } }
+        new MutationObserver(queueFit).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ["hidden", "class", "disabled"] });
+        window.addEventListener("resize", queueFit);
+        queueFit();
         // versions: a roster entry without ver is an old client; never blocks play
         const verOf = (p) => (p && p.pid === Net.pid ? GAME_VER : p && typeof p.ver === "string" && p.ver ? p.ver : "old");
         const verDiff = (p) => verOf(p) !== GAME_VER;
@@ -3689,7 +4239,7 @@
           paused = false; moving = false;
           netRoomCode = Net.code; netLastState = Date.now(); netResyncWanted = false;
           netConn = Net.open ? "open" : "connecting"; setNetDot(netConn); netDot.hidden = false;
-          if (info.cfg) Object.assign(cfg, info.cfg);
+          if (info.cfg) Object.assign(cfg, cleanCfg(info.cfg));
           // seat order, names from the roster, one colour per seat
           const roster = (Net.roster && Net.roster.players) || [];
           netSeen = {};
@@ -3798,7 +4348,7 @@
         Net.onQueue = (n, s) => { nqCount.textContent = `${n | 0} in queue`; countdown(s); };
         Net.onMatched = (code) => enterLobby(code);
         Net.onRoster = (r) => {
-          if (netView === "lobby") renderLobby();
+          if (netView === "lobby") { renderLobby(); netCfgSend(); }
           if (mode !== "online") return;
           netRosterCheck(r);
           if (netShopOn) { if (netShopSent) netShopWaitShow(); netShopCheck(); }
@@ -3813,6 +4363,10 @@
         Net.onMsg = (d, from) => {
           if (!d) return;
           if (d.k === "begin") return beginOnline(Object.assign({}, d, { from }));
+          if (d.k === "cfg") {
+            if (mode !== "online" && from === Net.host && from !== Net.pid) { netLobbyCfg = cleanCfg(d.cfg); if (netView === "lobby") renderLobby(); }
+            return;
+          }
           // the server tells the host a player rejoined: send them the match
           if (from === "server") { if (d.k === "rejoin" && d.pid) netSendState(String(d.pid)); return; }
           if (mode !== "online" || from === Net.pid) return;
@@ -3924,7 +4478,7 @@
             { label: "LEAVE", red: true, fn: () => openOnline() },
           ]);
         };
-        [netOn, netQuick, netLobby, netDlg].forEach((o) => {
+        [netOn, netQuick, netLobby, netDlg, byId("mapPick")].forEach((o) => {
           const d = dragScroll(o);
           o.addEventListener("click", (e) => { if (d.moved) { e.stopPropagation(); e.preventDefault(); d.moved = false; } }, true);
         });
