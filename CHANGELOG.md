@@ -14,3 +14,4 @@ Newest at the bottom. The live version is in DEPLOY.md.
 - v1.14: modern graphics with a Classic toggle; prices are a tenth of the original, sold one unit at a time; map builder (setup + online lobby).
 - v1.15: press-and-hold BUY/SELL repeats; trees, bushes and old wrecks on the battlefield (burnt when hit) and placeable in the map builder; wrecked-tank silhouettes in the background; button labels auto-shrink to fit.
 
+- v1.16: online hardening from the 2026-10-31 code review: secret per-seat rejoin tokens (no seat takeover by player id), host-only authoritative messages, rate limits and size caps, protocol revision 2 (v1.15 still accepted), quick match never shares a room that failed to start; shop purchases validated against prices; host picks 2–6 players per room (Quick Match stays 4); burnt scenery kept in saves and resyncs. Build: reproducible APK from `game/`, fail-closed signing, verified deploy, root CI with tests.
