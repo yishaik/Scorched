@@ -12,7 +12,7 @@ The turn-based tank artillery classic, rebuilt for your phone and your browser. 
 [![Download APK](https://img.shields.io/badge/Android-Download_APK-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://tanks.yishaik.com/download)
 [![Google Play](https://img.shields.io/badge/Google_Play-coming_soon-414141?style=for-the-badge&logo=googleplay&logoColor=white)](#support-the-game)
 
-![version](https://img.shields.io/badge/version-1.15-blue) ![platform](https://img.shields.io/badge/platform-Android%20%7C%20Web-informational) ![no ads](https://img.shields.io/badge/ads-none-success) ![no account](https://img.shields.io/badge/account-not%20needed-success)
+![version](https://img.shields.io/badge/version-1.15-blue) ![platform](https://img.shields.io/badge/platform-Android%20%7C%20Web-informational) ![no ads](https://img.shields.io/badge/ads-none-success) [![license](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE) ![no account](https://img.shields.io/badge/account-not%20needed-success)
 
 </div>
 
@@ -68,6 +68,12 @@ It's coming to **Google Play** as a paid download. Buying it there is the easies
 | Store art and copy, and the renderer that makes them | [`marketing/`](marketing/), [`tools/render/`](tools/render/) |
 
 Full docs live in [DOCS.md](DOCS.md), changes in [CHANGELOG.md](CHANGELOG.md), and contributor notes in [AGENTS.md](AGENTS.md) and [docs/HANDOFF.md](docs/HANDOFF.md).
+
+## License
+
+Scorched Tanks is free software under the [GNU GPL v3.0](LICENSE). You can play, study, copy, change and share it, including selling copies, as long as anything you distribute stays under the GPL with its source available.
+
+The signing key and the Google Play listing are not part of the repo. Builds you make yourself need your own key.
 
 ## Credits
 
