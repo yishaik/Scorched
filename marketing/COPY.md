@@ -2,6 +2,9 @@
 
 Don't call the game "Scorched Earth" or say it's official. It's a tribute to the classic DOS artillery games.
 
+## Business model
+Free and open source (GPL-3.0): play in the browser, download the APK, or build it from GitHub. Google Play gets a paid version for anyone who wants automatic updates and to support development. Never say "free on Google Play".
+
 ## Name and tagline
 - Name: **Scorched Tanks**
 - Tagline (EN): Aim. Fire. Scorch the earth.
@@ -40,13 +43,13 @@ No ads. No accounts. Just artillery.
 
 ## Social posts
 - EN: The DOS tank classic is back, on your phone. Play with friends online, or draw your own battlefield with a finger. 🎯💥 https://tanks.yishaik.com
-- EN (short): One shot. Perfect angle. Boom. Scorched Tanks, free on Android and the web: https://tanks.yishaik.com
+- EN (short): One shot. Perfect angle. Boom. Scorched Tanks: free in your browser, open source on GitHub, coming to Google Play: https://tanks.yishaik.com
 - HE: משחק הטנקים מה־DOS חזר, הפעם בטלפון. משחקים אונליין עם חברים או מציירים שדה קרב באצבע 🎯💥 https://tanks.yishaik.com
-- HE (קצר): זווית, כוח, בום. Scorched Tanks, חינם לאנדרואיד ובדפדפן: https://tanks.yishaik.com
+- HE (קצר): זווית, כוח, בום. Scorched Tanks: חינם בדפדפן, קוד פתוח ב־GitHub, ובקרוב ב־Google Play: https://tanks.yishaik.com
 
 ## Assets (in this folder)
 - feature-graphic.png, 1024×500 (Play Store feature graphic)
-- screenshot-1-sunset.png and screenshot-2-night.png, 1920×1080 (store screenshots)
+- screenshot-1-sunset.png, screenshot-2-night.png and screenshot-3-map-builder.png, 1920×1080 (store screenshots)
 - promo-square.png, 1080×1080 (Instagram, WhatsApp, Facebook)
 
 These are rendered from the game's own paint code. Real device screenshots of the shop, lobby and map builder are still needed for the store listing.
