@@ -30,7 +30,7 @@
 import LANDING from "./landing.txt";
 import GAME from "./game.txt";
 import APK from "./app.apk.bin";
-const APP_VER = "1.15";
+const APP_VER = "1.16";
 const PROTO = 2;
 const PROTO_MIN = 1;
 export const LIMITS = {

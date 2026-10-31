@@ -12,7 +12,7 @@ The turn-based tank artillery classic, rebuilt for your phone and your browser. 
 [![Download APK](https://img.shields.io/badge/Android-Download_APK-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://tanks.yishaik.com/download)
 [![Google Play](https://img.shields.io/badge/Google_Play-coming_soon-414141?style=for-the-badge&logo=googleplay&logoColor=white)](#support-the-game)
 
-![version](https://img.shields.io/badge/version-1.15-blue) ![platform](https://img.shields.io/badge/platform-Android%20%7C%20Web-informational) ![no ads](https://img.shields.io/badge/ads-none-success) [![license](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE) ![no account](https://img.shields.io/badge/account-not%20needed-success)
+![version](https://img.shields.io/badge/version-1.16-blue) ![platform](https://img.shields.io/badge/platform-Android%20%7C%20Web-informational) ![no ads](https://img.shields.io/badge/ads-none-success) [![license](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE) ![no account](https://img.shields.io/badge/account-not%20needed-success)
 
 </div>
 
@@ -63,7 +63,7 @@ It's coming to **Google Play** as a paid download. Buying it there is the easies
 |---|---|
 | Browser game (Canvas + WebAudio + JavaScript) | [`game/index.html`](game/index.html), with adjacent `hark.css`, `hark-hero.css` and `hark.js` |
 | Android wrapper (WebView, fullscreen, deep links) | [`android/`](android/) |
-| APK build scripts | [`android/`](android/) (Gradle) and [`build.sh`](build.sh) (legacy aapt). **Neither is a verified portable v1.15 release pipeline**; see [DEPLOY.md](DEPLOY.md) |
+| APK build scripts | [`android/`](android/) (Gradle) and [`build.sh`](build.sh) (legacy aapt). `build.sh` is the verified release path (fail-closed signing, assets from `game/`); see [docs/ANDROID-BUILD.md](docs/ANDROID-BUILD.md) |
 | Online server (Cloudflare Worker + Durable Objects) | [`server/`](server/), see [DEPLOY.md](DEPLOY.md) |
 | Store art and copy, and the renderer that makes them | [`marketing/`](marketing/), [`tools/render/`](tools/render/) |
 
