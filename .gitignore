@@ -1,3 +1,8 @@
 *.jks
 out/
 apk/*.idsig
+.android-build/
+# legacy deploy bundle files (deploy.sh now stages in a temp dir)
+server/landing.txt
+server/game.txt
+server/app.apk.bin
