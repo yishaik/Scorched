@@ -613,8 +613,10 @@
             <div class="x-gm-bar" id="noTitle">PLAY ONLINE</div>
             <div class="x-gm-body">
               <label class="x-net-field"><span>Nickname</span><input id="netNick" type="text" maxlength="16" autocomplete="nickname" spellcheck="false" enterkeyhint="done" /></label>
-              <button class="x-net-big" id="netQuickBtn">QUICK MATCH<small>Play with anyone</small></button>
+              <button class="x-net-big" id="netQuickBtn">QUICK MATCH<small>Play with anyone · 2–4 players</small></button>
               <button class="x-net-big" id="netCreateBtn">CREATE ROOM<small id="netCreateSub">Invite friends</small></button>
+              <button class="x-net-tog" id="netSize" aria-label="Room size"><i id="netSizeV">[4]</i>Players per room</button>
+              <p class="x-gm-note" id="netCap">Online: 2–6 players per room. Local games: up to 10 tanks.</p>
               <hr class="x-net-rule" />
               <div class="x-net-field">
                 <span id="netJoinLab">Join room</span>
@@ -652,6 +654,7 @@
               </section>
               <p class="x-net-q x-net-hot x-net-mix" id="nlMix" role="status" hidden><span>Some players have a different version - the game may go out of sync.</span><a href="https://scorched-tanks.yishai-k.workers.dev/" target="_blank" rel="noopener">UPDATE</a></p>
               <button class="x-net-tog" id="nlPub" role="switch" aria-checked="false" hidden><i id="nlPubBox">[ ]</i>Fill empty seats with strangers</button>
+              <button class="x-net-tog" id="nlSeats" aria-label="Seats in this room" hidden><i id="nlSeatsV">[4]</i>Seats in this room (2–6)</button>
               <button class="x-net-start" id="nlStart" hidden disabled>START GAME</button>
               <p class="x-gm-note" id="nlNeed" hidden>Needs 2 connected players</p>
               <p class="x-net-q x-net-hot" id="nlWait" hidden>Waiting for host to start…</p>
@@ -966,10 +969,12 @@
           },
           quick() { this.code = null; this.roster = null; this.host = null; open("quick"); },
           cancel() { if (kind === "quick") raw({ t: "cancel" }); stop(); },
-          async createRoom(isPublic) {
+          // online rooms hold 2-6 players (the server clamps to the same range); quick match rooms hold 4
+          async createRoom(isPublic, max) {
+            max = Math.min(6, Math.max(2, max | 0 || 4));
             const r = await fetch(`https://${NET_BASE}/api/room`, {
               method: "POST", headers: { "content-type": "application/json" },
-              body: JSON.stringify({ public: !!isPublic, max: 4 }),
+              body: JSON.stringify({ public: !!isPublic, max }),
             });
             if (!r.ok) throw new Error("HTTP " + r.status);
             const j = await r.json();
@@ -1601,6 +1606,23 @@
             decor.push({ x, t: r < 0.5 ? "tree" : r < 0.85 ? "bush" : "wreck", v: hsh(seed + 1, k), burnt: false });
           }
         }
+        // decor for snapshots: [x, type 0-2, variant, burnt 0/1] each. decorRead returns null for missing or bad data,
+        // and applyState then regenerates decor as before (older saves and v1.15 hosts send none)
+        const DECOR_MAX = 200;
+        function decorPack(list) {
+          return list.slice(0, DECOR_MAX).map((d) => [d.x, DECOR_T.indexOf(d.t), d.v, d.burnt ? 1 : 0]);
+        }
+        function decorRead(a, tw) {
+          if (!Array.isArray(a) || a.length > DECOR_MAX) return null;
+          const out = [];
+          for (const e of a) {
+            if (!Array.isArray(e) || e.length < 4) return null;
+            const x = e[0], t = DECOR_T[e[1]], v = e[2];
+            if (typeof x !== "number" || !(x >= 0 && x <= tw) || !t || typeof v !== "number" || !(v >= 0 && v <= 1)) return null;
+            out.push({ x, t, v, burnt: e[3] === 1 });
+          }
+          return out;
+        }
         function burnDecor(x, y, r) {
           decor.forEach((d) => {
             const gy0 = gy(d.x), hgt = (d.t === "tree" ? 26 : 8) * S;
@@ -1840,6 +1862,29 @@
           const it = ITEMS[k], n = Math.min(p.items[k], it.bundle);
           if (n <= 0) return;
           p.items[k] -= n; p.cash += Math.floor(((it.price / 2) * n) / it.bundle);
+        }
+        // is shop result m reachable from inventory b by legal buys and sells? Prices are per unit (bundle 1): a buy costs
+        // price, a sell returns floor(price / 2). The unlimited weapon and anything without a price cannot change. Cash may be
+        // lower than the best case (buying and selling back the same thing loses money), never higher. CPU pack buys are
+        // the same unit buys repeated. Pure: tests/game.test.mjs runs it in Node.
+        function shopLegal(b, m, W, I) {
+          if (!b || !m || !Array.isArray(m.stock) || m.stock.length !== W.length || !Array.isArray(m.items) || m.items.length !== I.length) return false;
+          if (typeof m.cash !== "number" || !isFinite(m.cash) || m.cash < 0) return false;
+          if (Number.isInteger(b.cash) && !Number.isInteger(m.cash)) return false;
+          let best = b.cash;
+          const side = (list, have, got) => {
+            for (let i = 0; i < list.length; i++) {
+              const v = got[i], o = have[i], x = list[i];
+              if (typeof v !== "number" || !Number.isInteger(v)) return false;
+              if (o < 0 || !x.price) { if (v !== o) return false; continue; }
+              if (v < 0) return false;
+              const d = v - o;
+              best += d > 0 ? -d * x.price : -d * Math.floor(x.price / 2);
+            }
+            return true;
+          };
+          if (!side(W, b.stock, m.stock) || !side(I, b.items, m.items)) return false;
+          return m.cash <= best;
         }
         function cpuBuy(p) {
           // a parachute or shield first, sometimes, then batteries for low health
@@ -3320,6 +3365,7 @@
               return Object.assign(rest, { pi: players.indexOf(p) });
             }),
             TW, TH, mruns: maskRuns(),
+            decor: decorPack(decor),
           };
         }
         // returns the save time, or 0 when nothing was written; an online match is never saved
@@ -3384,7 +3430,9 @@
             hud.hidden = false; controls.hidden = false; measure();
             mask = m; TW = d.TW; TH = d.TH;
             allocImage(); settling = false;
-            genDecor(cfg.map ? cfg.map.d || [] : null);
+            // the saved or host decor, burnt trees included; without it, the decor is regenerated as before
+            const dk = decorRead(d.decor, TW);
+            if (dk) decor = dk; else genDecor(cfg.map ? cfg.map.d || [] : null);
             // the saved or host world keeps its exact size; a different screen letterboxes it instead of resampling
             setWorld(TW, TH);
             last = performance.now();
@@ -3636,6 +3684,9 @@
           nlList.innerHTML = rows.join("");
           const live = ps.filter((p) => p.on).length;
           nlPub.hidden = !host;
+          const seats = byId("nlSeats");
+          seats.hidden = !host || r.status !== "lobby" || !((Net.serverProto | 0) >= 2);
+          byId("nlSeatsV").textContent = `[${r.max || 4}]`;
           nlPub.setAttribute("aria-checked", r.public ? "true" : "false");
           byId("nlPubBox").textContent = r.public ? "[X]" : "[ ]";
           nlStart.hidden = !host;
@@ -4030,14 +4081,12 @@
           if (!netShopOn || m.round !== netShopRound) return;
           netShopMark(m.pids);
         }
-        // host: right lengths, whole non-negative counts (the unlimited weapon stays unlimited), cash within what the player had
+        // host: the shop must be reachable from this player's inventory at the round's end (netShopBase, which every device
+        // keeps, so a new host after a migration checks the same way) by legal buys and sells at the shop's prices
         function netShopValid(m) {
-          const b = netShopBase[m.pid];
-          if (!b || !Array.isArray(m.stock) || m.stock.length !== WEAPONS.length || !Array.isArray(m.items) || m.items.length !== ITEMS.length) return false;
-          if (typeof m.cash !== "number" || !isFinite(m.cash) || m.cash < 0 || m.cash > b.cash) return false;
-          const whole = (v) => typeof v === "number" && Number.isInteger(v);
-          if (!m.stock.every((v, i) => whole(v) && (b.stock[i] < 0 ? v === b.stock[i] : v >= 0))) return false;
-          return m.items.every((v) => whole(v) && v >= 0);
+          const ok = shopLegal(netShopBase[m.pid], m, WEAPONS, ITEMS);
+          if (!ok) console.warn("[online] shop rejected for", m.pid);
+          return ok;
         }
         // host: close when every connected human is ready
         function netShopCheck() {
@@ -4436,12 +4485,30 @@
         codeIn.addEventListener("input", syncJoin);
         codeIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); if (!joinBtn.disabled) joinBtn.click(); } });
         byId("netQuickBtn").onclick = startQuick;
+        // room size for CREATE ROOM, remembered on this device; the host can change it in the lobby on servers that support it
+        const ROOM_MIN = 2, ROOM_MAX = 6, ROOM_KEY = "st-room-max";
+        function roomSize() { let v = 4; try { v = parseInt(localStorage.getItem(ROOM_KEY), 10) || 4; } catch (e) {} return Math.min(ROOM_MAX, Math.max(ROOM_MIN, v)); }
+        function showRoomSize() { byId("netSizeV").textContent = `[${roomSize()}]`; byId("netSize").setAttribute("aria-label", `Room size: ${roomSize()} players`); }
+        byId("netSize").onclick = () => {
+          const v = roomSize() >= ROOM_MAX ? ROOM_MIN : roomSize() + 1;
+          try { localStorage.setItem(ROOM_KEY, String(v)); } catch (e) {}
+          showRoomSize();
+        };
+        showRoomSize();
+        // lobby: the host sets the seats (never below the players already in); only servers with protocol 2 apply it
+        byId("nlSeats").onclick = () => {
+          const r = Net.roster;
+          if (!r || !Net.isHost() || r.status !== "lobby") return;
+          const min = Math.max(ROOM_MIN, (r.players || []).length);
+          const cur = r.max || 4, v = cur >= ROOM_MAX ? min : Math.max(min, cur + 1);
+          if (v !== cur) Net.raw({ t: "max", v });
+        };
         createBtn.onclick = async () => {
           if (creating) return;
           commitName();
           creating = true; createBtn.disabled = true; byId("netCreateSub").textContent = "Creating room…";
           try {
-            const code = await Net.createRoom(false);
+            const code = await Net.createRoom(false, roomSize());
             enterLobby(code);
           } catch (e) {
             dosAlert("Could not create a room. Check your connection and try again.");
