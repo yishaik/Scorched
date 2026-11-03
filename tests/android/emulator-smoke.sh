@@ -73,6 +73,8 @@ if cdp_forward; then
   echo "$INFO" | grep -q '"titleVisible":true' || fail "WebView did not render the title screen: $INFO"
   echo "$INFO" | grep -q '"hook":"undefined"' || fail "test hook is active in a normal launch: $INFO"
   echo "$INFO" | grep -q '"pid":"[0-9a-f]' || fail "game did not create st-pid in localStorage: $INFO"
+  cw="$(echo "$INFO" | sed -n 's/.*"canvas":\[\([0-9]*\),\([0-9]*\)\].*/\1/p')"; ch="$(echo "$INFO" | sed -n 's/.*"canvas":\[\([0-9]*\),\([0-9]*\)\].*/\2/p')"
+  [ "${cw:-0}" -ge 200 ] && [ "${ch:-0}" -ge 200 ] || fail "game canvas is ${cw:-?}x${ch:-?} device px: the layout collapsed"
 else
   fail "no WebView DevTools socket (is the APK debuggable?)"
 fi
@@ -81,6 +83,9 @@ log "real WebView: play a local CPU round to a winner through the test hook"
 if cdp_forward; then
   PLAY="$(timeout 300 node "$HERE/webview-cdp.mjs" "$CDP_PORT" play 2>&1)"; echo "$PLAY" | tee "$OUT/cdp-play.json"
   echo "$PLAY" | grep -q '"ok":true' || fail "CPU round in the WebView did not finish: $PLAY"
+  wh="$(echo "$PLAY" | sed -n 's/.*"world":{"W":\([0-9]*\),"H":\([0-9]*\).*/\1 \2/p')"
+  read -r ww hh <<< "$wh"
+  [ "${ww:-0}" -ge 100 ] && [ "${hh:-0}" -ge 100 ] || fail "round was played on a ${ww:-?}x${hh:-?} world: the stage has no size"
   shot 02-round-over
   cdp unflag >/dev/null 2>&1 || true
   sleep 3
@@ -106,7 +111,8 @@ alive || fail "app died on scorchedtanks://join/TEST"
 shot 06-deeplink-join-offline
 if cdp_forward; then
   DL="$(cdp info 2>&1)"; echo "$DL" | tee "$OUT/cdp-deeplink.json"
-  echo "$DL" | grep -q '"netCode":"TEST"' || fail "deep link scorchedtanks://join/TEST did not start a join for room TEST: $DL"
+  # offline, the join fails at once and the client may already have reset Net.code; the room screen must have opened
+  echo "$DL" | grep -qE '"online":\[[^]]*"net(Lobby|Online)"' || fail "deep link scorchedtanks://join/TEST did not open the room join: $DL"
 fi
 
 log "reinstall over the installed app (update path): app data must be kept"
