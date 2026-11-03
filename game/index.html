@@ -4593,6 +4593,107 @@
         }
         window.addEventListener("hashchange", deepLink);
 
+        // ---- test hook (v1.16+): opt-in only. Active when the page URL has ?test=1, or when a host (an instrumented
+        // WebView) sets window.__ST_TEST_FLAG__ === true before this script runs. Without the flag nothing below runs:
+        // no global is created, no listener added, no state touched. Used by tests/e2e (Playwright) and CI only.
+        const TEST_ON = (() => {
+          try { return /[?&]test=1(?:&|$)/.test(location.search) || window.__ST_TEST_FLAG__ === true; } catch (e) { return false; }
+        })();
+        if (TEST_ON) {
+          const vis = (el) => !!el && !el.hidden;
+          const maskHash = () => {
+            let h = 2166136261 >>> 0;
+            for (let i = 0; i < mask.length; i++) h = Math.imul(h ^ mask[i], 16777619) >>> 0;
+            return h;
+          };
+          const screen = () => {
+            if (vis(titleEl)) return "title";
+            if (vis(byId("mapEd"))) return "mapEditor";
+            if (vis(byId("mapPick"))) return "mapPicker";
+            if (vis(pauseEl)) return "pause";
+            if (vis(stand)) return "standings";
+            if (vis(win)) return "roundOver";
+            if (vis(shopEl)) return "shop";
+            if (vis(setup)) return "setup";
+            if (vis(netLobby)) return "onlineLobby";
+            if (vis(netQuick)) return "onlineQuick";
+            if (vis(netOn)) return "online";
+            if (state === "play") return "play";
+            if (vis(menu)) return "menu";
+            return state;
+          };
+          const snap = () => ({
+            screen: screen(), state, mode, round, rounds: cfg.rounds, turn, busy, paused, moving, wind, gfx,
+            myTurn: state === "play" && tanks.length > 0 ? isMyTurn() : false,
+            cpuPending: !!pendingCpu, shots: shots.length, settling,
+            world: { W, H, TW, TH, SW, SH, VS, maskHash: TW * TH ? maskHash() : 0 },
+            shopPlayer: shopP ? shopP.name : null,
+            winText: vis(win) ? byId("winText").textContent : null,
+            standTitle: vis(stand) ? byId("standTitle").textContent : null,
+            tanks: tanks.map((t, i) => ({
+              i, name: t.name, type: t.p.type, cpu: !!t.p.cpu, hp: Math.max(0, Math.round(t.health * 100) / 100), alive: t.health > 0,
+              x: t.x, y: t.y, angle: t.angle, power: t.power, weapon: t.weapon, weaponName: WEAPONS[t.weapon] ? WEAPONS[t.weapon].name : null,
+            })),
+            players: players.map((p) => ({ name: p.name, type: p.type, cash: p.cash, wins: p.wins, kills: p.kills, stock: p.stock.slice(), items: p.items.slice() })),
+            net: mode === "online" || netView ? { view: netView, code: window.Net.code, host: window.Net.isHost(), open: window.Net.open } : null,
+          });
+          // synchronous fast-forward: runs pending CPU decisions at once and steps the physics until a human can act,
+          // the round ends, or maxSim seconds of game time pass. Nothing is drawn meanwhile (the next frame draws).
+          const settle = (maxSim) => {
+            let sim = 0;
+            const lim = maxSim > 0 ? maxSim : 120;
+            while (sim < lim && state === "play" && !paused) {
+              if (pendingCpu) { const fn = pendingCpu; cpuCancel(); fn(); continue; }
+              if (!busy && !moving && !shots.length && isMyTurn()) break;
+              update(0.033); sim += 0.033;
+            }
+            last = performance.now();
+            return snap();
+          };
+          window.__ST_TEST__ = Object.freeze({
+            version: GAME_VER,
+            state: snap,
+            seed(n) { rngSeed(n == null ? null : n >>> 0); return true; },
+            weapons: () => WEAPONS.map((w, i) => ({ i, name: w.name, kind: w.kind, price: w.price || 0 })),
+            items: () => ITEMS.map((it, k) => ({ k, id: it.id, name: it.name, price: it.price })),
+            // aim the current tank; returns false when it is not a human's turn here
+            aim(o) {
+              if (state !== "play" || busy || !isMyTurn()) return false;
+              const t = tanks[turn];
+              if (o && o.angle != null) t.angle = Math.max(0, Math.min(180, Math.round(+o.angle)));
+              if (o && o.power != null) t.power = Math.max(1, Math.min(maxPow(t), Math.round(+o.power)));
+              if (o && o.weapon != null && t.stock[o.weapon] !== 0) t.weapon = o.weapon | 0;
+              updateUI(); netAim();
+              return true;
+            },
+            // best angle/power against tank i by the game's own trajectory model (calm-air grid search, no rnd() used)
+            solve(i) {
+              const me = tanks[turn], foe = tanks[i];
+              if (!me || !foe || state !== "play") return null;
+              let best = null;
+              for (let a = 5; a <= 175; a += 1) for (let p = 10; p <= 100; p += 2) {
+                const h = simulate(me, a, p, false, false), d = Math.hypot(h.x - foe.x, h.y - (foe.y - 4 * S));
+                if (!best || d < best.d) best = { angle: a, power: p, d };
+              }
+              return best;
+            },
+            fire() { if (state !== "play" || busy || !isMyTurn()) return false; humanFire(); return true; },
+            settle,
+            // real-time wait (animations run normally) until nothing is moving, or timeout
+            waitSettled(ms) {
+              const t0 = Date.now(), lim = ms || 20000;
+              return new Promise((res) => {
+                const tick = () => {
+                  const s = snap();
+                  const idle = state !== "play" || (!busy && !shots.length && !settling && !pendingCpu);
+                  if (idle || Date.now() - t0 > lim) return res(Object.assign(s, { timedOut: !idle }));
+                  setTimeout(tick, 50);
+                };
+                tick();
+              });
+            },
+          });
+        }
         document.getElementById("muteBtn").onclick = () => setMuted(!muted);
         setMuted(muted);
         updateFFBtn();
