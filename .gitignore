@@ -6,3 +6,9 @@ apk/*.idsig
 server/landing.txt
 server/game.txt
 server/app.apk.bin
+# browser E2E (tests/e2e)
+tests/e2e/node_modules/
+tests/e2e/test-results/
+tests/e2e/playwright-report/
+tests/e2e/blob-report/
+android-artifacts/

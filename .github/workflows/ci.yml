@@ -1,11 +1,17 @@
 name: CI
 
-# Build and test only. This workflow never publishes releases, uploads APKs or deploys the Worker.
+# Build and test only. This workflow never publishes releases, uploads APKs/AABs or deploys the Worker.
+# Uploaded artifacts are test evidence only (screenshots, logcat, Playwright reports), kept 14 days.
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Store gate in release mode: versionCode must be strictly greater than the published APK's"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -99,3 +105,122 @@ jobs:
           for f in game/*.html game/*.css game/*.js; do unzip -p "$REL" "assets/$(basename "$f")" | cmp - "$f"; done
           if java -jar "$APKSIGNER_JAR" verify "$REL" 2>/dev/null; then echo 'release APK is signed without a release key' >&2; exit 1; fi
           echo 'Gradle APKs OK (artifacts are not uploaded)'
+
+  e2e-browser:
+    name: Browser E2E (Playwright, Chromium, Pixel 7 portrait + landscape, local two-client online)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: tests/e2e
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: tests/e2e/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Playwright (the online project runs server/worker.js locally under wrangler dev; never production)
+        env:
+          ST_ONLINE: '1'
+        run: npx playwright test
+      - name: Upload test evidence (reports, screenshots, traces)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-evidence
+          path: |
+            tests/e2e/playwright-report/
+            tests/e2e/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  android-emulator:
+    name: Android emulator smoke (API ${{ matrix.api }}, debug APK, offline)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        api: [24, 36]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Build debug APK (AGP debug key generated on this runner; discarded with it)
+        working-directory: android
+        run: gradle :app:assembleDebug --no-daemon --stacktrace
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Emulator smoke (install, launch, CDP game round, rotate, deep links, update keeps data, logcat)
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ matrix.api }}
+          arch: x86_64
+          target: google_apis
+          profile: pixel_6
+          disable-animations: true
+          emulator-boot-timeout: 900
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -no-snapshot
+          script: bash tests/android/emulator-smoke.sh android/app/build/outputs/apk/debug/app-debug.apk android-artifacts/api-${{ matrix.api }}
+      - name: Upload test evidence (screenshots, logcat, CDP results; no APK)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-emulator-api-${{ matrix.api }}
+          path: android-artifacts/
+          retention-days: 14
+          if-no-files-found: ignore
+
+  store-gate:
+    name: Store-readiness gate (AAB via Gradle, unsigned, never uploaded)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+      - name: Build release AAB (no SCORCHED_KEYSTORE* env, so it is unsigned)
+        working-directory: android
+        run: gradle :app:bundleRelease --no-daemon --stacktrace
+      - name: Fetch bundletool (pinned, checksum-verified)
+        run: |
+          set -euo pipefail
+          curl -fsSL -o "$RUNNER_TEMP/bundletool.jar" https://github.com/google/bundletool/releases/download/1.18.1/bundletool-all-1.18.1.jar
+          echo "${BUNDLETOOL_SHA256}  $RUNNER_TEMP/bundletool.jar" | sha256sum -c -
+        env:
+          BUNDLETOOL_SHA256: 675786493983787ffa11550bdb7c0715679a44e1643f3ff980a529e9c822595c
+      - name: Gate (targetSdk, minSdk, versionCode vs GAME_VER and the published APK, permissions, native libs, assets)
+        env:
+          STORE_GATE_STRICT: ${{ github.event_name == 'workflow_dispatch' && inputs.release && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-/usr/local/lib/android/sdk}}"
+          AAPT="$(ls -d "$SDK"/build-tools/* | sort -V | tail -n1)/aapt"
+          LAST_VC="$("$AAPT" dump badging apk/ScorchedTanks.apk | sed -n "s/.*versionCode='\([0-9]*\)'.*/\1/p" | head -n1)"
+          echo "last released versionCode (apk/ScorchedTanks.apk): ${LAST_VC:-unknown}"
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          test -f "$AAB"
+          if jarsigner -verify "$AAB" 2>/dev/null | grep -q "jar verified"; then echo "::error::release AAB is signed without a release key"; exit 1; fi
+          node tests/android/store-gate.mjs --aab "$AAB" --bundletool "$RUNNER_TEMP/bundletool.jar" --last-vc "${LAST_VC:-0}"
