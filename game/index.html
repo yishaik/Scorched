@@ -3861,7 +3861,7 @@
         ["pointerup", "pointercancel", "lostpointercapture"].forEach((ev) => meCv.addEventListener(ev, () => (meLast = null)));
         window.addEventListener("resize", () => { if (!byId("mapEd").hidden) requestAnimationFrame(meSize); });
         byId("meFlat").onclick = () => { meH = meH.map(() => 25); meD = []; meRender(); };
-        byId("meSmooth").onclick = () => { meH = meH.map((v, i) => Math.round(((meH[i - 1] ?? v) + v * 2 + (meH[i + 1] ?? v)) / 4)); meRender(); };
+        byId("meSmooth").onclick = () => { meH = meH.map((v, i) => Math.round(((meH[i - 1] == null ? v : meH[i - 1]) + v * 2 + (meH[i + 1] == null ? v : meH[i + 1])) / 4)); meRender(); };
         byId("meCancel").onclick = () => { byId("mapEd").hidden = true; };
         byId("meSave").onclick = () => {
           const m = cleanMap({ n: byId("meName").value.trim() || "Map", h: meH, d: meD });
