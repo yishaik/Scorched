@@ -33,3 +33,11 @@ test('game/hark.js avoids syntax newer than ES2018', () => {
   const c = code(read('game/hark.js'));
   for (const [re, what] of BANNED) assert.ok(!re.test(c), `hark.js uses ${what}`);
 });
+
+// `inset` (Chrome 87) collapsed the whole layout on the API 24 emulator (WebView/Chrome 69): the fixed root got no
+// height, so the stage, canvas and world were 1 px tall. Use top/right/bottom/left instead.
+test('game CSS does not rely on the inset shorthand', () => {
+  const html = read('game/index.html');
+  const css = (html.match(/<style[^>]*>[\s\S]*?<\/style>/g) || []).join('\n');
+  assert.ok(!/(^|[;{\s])inset\s*:/.test(css), 'use top/right/bottom/left instead of inset:');
+});

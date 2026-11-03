@@ -16,12 +16,12 @@
       html, body { margin: 0; height: 100%; overflow: hidden; touch-action: none; overscroll-behavior: none; }
       /* three zones, top to bottom: HUD bar, canvas stage, control bar. Nothing overlaps the stage. */
       .x-game {
-        position: fixed; inset: 0; display: flex; flex-direction: column; touch-action: none; user-select: none; -webkit-user-select: none;
+        position: fixed; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; touch-action: none; user-select: none; -webkit-user-select: none;
         font-family: var(--sans); background: var(--fill-primary-on);
         padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right);
       }
       .x-stage { position: relative; flex: 1 1 auto; min-height: 0; min-width: 0; overflow: hidden; }
-      .x-stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+      .x-stage canvas { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; display: block; touch-action: none; }
       /* in-game HUD: retro DOS stat cells, self-contained colors (no hark.css variables) */
       .x-hud {
         flex: 0 0 auto; display: flex; align-items: center; gap: 8px; box-sizing: border-box;
@@ -149,7 +149,7 @@
         .x-stand th, .x-stand td { padding: 6px 6px; }
       }
       .x-overlay {
-        position: absolute; inset: 0; display: flex; align-items: flex-start; justify-content: flex-start;
+        position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; align-items: flex-start; justify-content: flex-start;
         background: rgba(0, 0, 0, 0.35); overflow-x: hidden; overflow-y: auto; padding: 12px; box-sizing: border-box;
       }
       .x-overlay > .x-panel { margin: auto; max-width: 100%; box-sizing: border-box; }
@@ -192,7 +192,7 @@
       .x-stand thead th { color: var(--text-secondary); font-weight: var(--weight-regular); }
       /* DOS-style shop */
       .x-shop {
-        position: absolute; inset: 0; display: flex; flex-direction: column; gap: 8px; padding: 8px; box-sizing: border-box;
+        position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; gap: 8px; padding: 8px; box-sizing: border-box;
         background: #a8a8a8; color: #000; font-family: "Geist Mono", ui-monospace, monospace;
       }
       .x-shop[hidden], .x-overlay[hidden] { display: none; }
@@ -230,7 +230,7 @@
       .x-shop-done { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       /* handoff, confirm and ready cards over the shop */
       .x-shop-card {
-        position: absolute; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
+        position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 2; display: flex; align-items: center; justify-content: center;
         padding: 16px; box-sizing: border-box; background: #0000a8;
       }
       .x-shop-card[hidden] { display: none; }
@@ -279,7 +279,7 @@
       @media (max-width: 480px) { .x-shop-row { grid-template-columns: 1fr 64px 64px; } .x-shop-own { grid-column: 1; text-align: left; grid-row: 2; } }
       /* title screen: DOS-style logo over the fireworks drawn on the canvas */
       .x-title {
-        position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+        position: absolute; top: 0; right: 0; bottom: 0; left: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
         gap: 28px; text-align: center; cursor: pointer; padding: var(--gutter); box-sizing: border-box;
       }
       .x-title[hidden] { display: none; }
@@ -332,7 +332,7 @@
       .x-ffbar button:disabled { color: #7a7a7a; }
       /* mid-game menu: DOS window over the paused battlefield; the overlay itself scrolls */
       .x-gm {
-        position: absolute; inset: 0; z-index: 5; display: flex; padding: 12px; box-sizing: border-box;
+        position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 5; display: flex; padding: 12px; box-sizing: border-box;
         overflow-x: hidden; overflow-y: auto; background: rgba(0, 0, 0, 0.6); touch-action: none;
         font-family: "Geist Mono", ui-monospace, monospace; color: #000;
         padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(12px, env(safe-area-inset-bottom));
@@ -433,7 +433,7 @@
           repeating-radial-gradient(circle, transparent 0 24px, #55ff5566 24px 25px), #001800;
       }
       .x-radar::after {
-        content: ""; position: absolute; inset: 0; border-radius: 50%;
+        content: ""; position: absolute; top: 0; right: 0; bottom: 0; left: 0; border-radius: 50%;
         background: conic-gradient(from 0deg, #55ff55aa, transparent 22%, transparent);
         animation: x-sweep 2.2s linear infinite;
       }
@@ -484,7 +484,7 @@
       .x-gm .x-map-list .x-map-use.is-on { color: #ffff55; }
       .x-gm .x-map-list .x-map-use span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
       .x-gm .x-map-list .x-map-del, .x-gm .x-map-list .x-map-edit { flex: 0 0 auto; min-height: 40px; padding: 0 8px; font-size: 13px; }
-      .x-map-ed { position: fixed; inset: 0; z-index: 9; display: flex; flex-direction: column; background: #0000a8; font-family: "Geist Mono", ui-monospace, monospace; color: #fff;
+      .x-map-ed { position: fixed; top: 0; right: 0; bottom: 0; left: 0; z-index: 9; display: flex; flex-direction: column; background: #0000a8; font-family: "Geist Mono", ui-monospace, monospace; color: #fff;
         padding: max(6px, env(safe-area-inset-top)) max(6px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(6px, env(safe-area-inset-left)); gap: 6px; box-sizing: border-box; }
       .x-map-ed[hidden] { display: none; }
       .x-map-top { display: flex; align-items: center; gap: 10px; }
@@ -495,7 +495,7 @@
       .x-map-tools button.is-on { background: #ffff55; border-color: #404040 #fff #fff #404040; }
       @media (max-width: 640px) { .x-map-top { flex-wrap: wrap; } .x-map-tools { flex: 1 1 100%; } .x-map-tools button { flex: 1 1 0; } }
       .x-map-cv { position: relative; flex: 1 1 auto; min-height: 0; border: 2px solid; border-color: #404040 #fff #fff #404040; background: #000; touch-action: none; }
-      .x-map-cv canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; }
+      .x-map-cv canvas { position: absolute; top: 0; right: 0; bottom: 0; left: 0; width: 100%; height: 100%; touch-action: none; }
       .x-map-tip { position: absolute; top: 8px; left: 0; right: 0; margin: 0; text-align: center; font-size: 14px; color: #ffff55; pointer-events: none; }
       .x-map-bar { display: flex; gap: 6px; }
       .x-map-bar button { flex: 1 1 0; min-height: 48px; font: inherit; font-size: 16px; letter-spacing: 0.06em; color: #000; background: #c0c0c0; border-radius: 0; border: 2px solid; border-color: #fff #404040 #404040 #fff; }
@@ -540,7 +540,7 @@
       /* online match: whose turn it is over the control bar, and (you) in the HUD */
       .x-controls { position: relative; }
       .x-turnmsg {
-        position: absolute; inset: 0; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 0 12px;
+        position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: 1; display: flex; align-items: center; justify-content: center; padding: 0 12px;
         background: rgba(16, 16, 28, 0.88); font-family: "Geist Mono", ui-monospace, monospace; font-size: 17px; font-weight: 700;
         letter-spacing: 0.06em; text-transform: uppercase; text-shadow: 0 0 2px #000; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
