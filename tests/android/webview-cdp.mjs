@@ -51,6 +51,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const INFO = `(() => { const t = document.getElementById("title"); return { href: location.href, ready: document.readyState,
   titleVisible: !!t && !t.hidden, menuVisible: !!document.getElementById("menu") && !document.getElementById("menu").hidden,
   hook: typeof window.__ST_TEST__, ver: typeof GAME_VER === "string" ? GAME_VER : null,
+  online: ["netOnline", "netLobby", "netDlg"].filter((id) => { const e = document.getElementById(id); return e && !e.hidden; }),
+  netCode: window.Net ? window.Net.code : null,
   pid: localStorage.getItem("st-pid"), marker: localStorage.getItem("st-e2e-marker"),
   canvas: (() => { const c = document.getElementById("cv"); return c ? [c.width, c.height] : null; })() }; })()`;
 

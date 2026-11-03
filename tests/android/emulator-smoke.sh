@@ -24,6 +24,14 @@ adb shell dumpsys package com.google.android.webview 2>/dev/null | grep -m1 vers
 adb shell dumpsys package com.android.webview 2>/dev/null | grep -m1 versionName | tee -a "$OUT/webview-version.txt" || true
 adb shell dumpsys package com.android.chrome 2>/dev/null | grep -m1 versionName | sed 's/^/chrome /' | tee -a "$OUT/webview-version.txt" || true
 
+# Android 7-9 can use the Chrome app as the WebView provider (that is how real devices get WebView updates from
+# Play). The stock API 24 image ships Android System WebView 53, older than real updated devices; use the newer
+# installed Chrome as provider when there is one, and record which provider ran the test.
+if [ "$api" -lt 29 ] && adb shell pm list packages 2>/dev/null | tr -d '\r' | grep -qx "package:com.android.chrome"; then
+  adb shell cmd webviewupdate set-webview-implementation com.android.chrome 2>&1 | tee -a "$OUT/webview-version.txt" || true
+fi
+adb shell dumpsys webviewupdate 2>/dev/null | tr -d '\r' | grep -iE "current webview package|webview package \(name" | tee -a "$OUT/webview-version.txt" || true
+
 log "offline: wifi and mobile data off (no production traffic)"
 adb shell svc wifi disable || true
 adb shell svc data disable || true
@@ -89,11 +97,16 @@ log "deep links (offline): invalid code TEST1 is ignored; valid code TEST tries 
 adb shell am start -W -a android.intent.action.VIEW -d "scorchedtanks://join/TEST1" "$PKG" | tee -a "$OUT/am.txt"; sleep 4
 alive || fail "app died on scorchedtanks://join/TEST1"
 shot 05-deeplink-invalid
+if cdp_forward; then
+  DL1="$(cdp info 2>&1)"; echo "$DL1" | tee "$OUT/cdp-deeplink-invalid.json"
+  echo "$DL1" | grep -q '"online":\[\]' || fail "invalid code TEST1 opened the online panel: $DL1"
+fi
 adb shell am start -W -a android.intent.action.VIEW -d "scorchedtanks://join/TEST" "$PKG" | tee -a "$OUT/am.txt"; sleep 6
 alive || fail "app died on scorchedtanks://join/TEST"
 shot 06-deeplink-join-offline
 if cdp_forward; then
   DL="$(cdp info 2>&1)"; echo "$DL" | tee "$OUT/cdp-deeplink.json"
+  echo "$DL" | grep -q '"netCode":"TEST"' || fail "deep link scorchedtanks://join/TEST did not start a join for room TEST: $DL"
 fi
 
 log "reinstall over the installed app (update path): app data must be kept"
@@ -101,6 +114,8 @@ MARK="m$(date +%s)"
 if cdp_forward; then
   BEFORE="$(cdp set-marker "$MARK" >/dev/null 2>&1; cdp info 2>&1)"; echo "$BEFORE" | tee "$OUT/cdp-before-update.json"
 fi
+# WebView writes localStorage to disk lazily: background the app and give it time to flush before stopping it
+adb shell input keyevent KEYCODE_HOME; sleep 6
 adb shell am force-stop "$PKG"
 sleep 2
 adb install -r "$APK" || fail "reinstall-over (install -r) failed"
