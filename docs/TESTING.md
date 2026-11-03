@@ -48,6 +48,7 @@ protocol). Without the flag no global, listener or timer is created and gameplay
 | Malformed `st-*` localStorage payloads and a full quota: no crash, bad save dropped with a message | `specs/storage.spec.mjs` | local + CI |
 | Online: create room, join by code, lobby roster, host start, simultaneous shop, 3 turns with both clients agreeing on turn, terrain and HP; bad code → error dialog | `specs/online.spec.mjs` against `server/worker.js` under **local** `wrangler dev` | local + CI |
 | Android: install, launch, WebView renders, hook inert, a full CPU round in the real WebView (DevTools protocol), rotation, deep links `scorchedtanks://join/TEST1` (ignored: not 4 letters) and `/TEST` (offline join), reinstall-over keeps localStorage, home/resume; fails on FATAL EXCEPTION, ANR or chromium `Uncaught` | `tests/android/emulator-smoke.sh` | `android-emulator` (API 24, 36) |
+| Old-WebView syntax/CSS guard: no `??`, `?.`, `||=`/`&&=`, numeric separators in game scripts; no CSS `inset` in game styles (both broke the game on the API 24 emulator's WebView) | `tests/node/webview-compat.test.mjs` | local + `node-tests` |
 | Store gate on the release AAB: package, minSdk 24, targetSdk ≥ 36, versionCode = GAME_VER patch and > published APK, permission allowlist (INTERNET), not debuggable, no/16 KB-aligned `.so`, assets = `game/` | `tests/android/store-gate.mjs` (+ `tests/node/store-gate.test.mjs`) | `store-gate` |
 
 All browser and emulator tests are hermetic: Playwright answers Google Fonts with an empty stylesheet and aborts every
