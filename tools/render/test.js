@@ -22,6 +22,8 @@ ${grab(src, 'vnoise')}
 ${grab(src, 'modernPx')}
 ${grab(src, 'ridge')}
 ${grab(src, 'ridgeProps')}
+${grab(src, 'ridgeLit')}
+${grab(src, 'hillGrass')}
 ${grab(src, 'paintSky')}
 ${grab(src, 'drawDecor')}
 ${grab(src, 'drawTankModern')}
