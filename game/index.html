@@ -1748,8 +1748,45 @@
                 ctx.moveTo(x, y - 13 * u); ctx.lineTo(x + 5 * u, y - 20 * u);
                 ctx.moveTo(x, y - 16 * u); ctx.lineTo(x - 2 * u, y - 23 * u);
                 ctx.stroke();
-                ctx.fillStyle = "#ff6a1a"; ctx.globalAlpha = 0.5 + 0.5 * Math.sin(performance.now() / 300 + d.v * 9);
-                ctx.fillRect(x - 0.8 * u, y - 9 * u, 1.6 * u, 1.6 * u); ctx.globalAlpha = 1;
+                const now = performance.now() / 1000;
+                const flicker = 0.65 + 0.35 * Math.sin(now * 8 + d.v * 9);
+                const gx = x, gyb = y - 12 * u;
+                const gl = ctx.createRadialGradient(gx, gyb, 1, gx, gyb, 18 * u);
+                gl.addColorStop(0, "rgba(255,180,40," + (0.5 * flicker) + ")");
+                gl.addColorStop(1, "rgba(255,80,0,0)");
+                ctx.fillStyle = gl;
+                ctx.beginPath(); ctx.arc(gx, gyb, 18 * u, 0, Math.PI * 2); ctx.fill();
+                const cols = ["#ffee66", "#ffd23a", "#ff8a1a", "#ff5a10", "#ff3a10"];
+                for (let k = 0; k < 5; k++) {
+                  const fh = (9 + k * 3 + Math.sin(now * 7 + k + d.v) * 2.2) * u;
+                  const fw = (2.8 + k * 0.45) * u;
+                  const fx = x + (hsh(k + 3, d.v * 40) - 0.5) * 8 * u;
+                  const fy = y - (7 + k * 1.4) * u;
+                  ctx.globalAlpha = 0.8 * flicker;
+                  ctx.fillStyle = cols[k];
+                  ctx.beginPath();
+                  ctx.moveTo(fx - fw, fy);
+                  ctx.quadraticCurveTo(fx, fy - fh, fx + fw, fy);
+                  ctx.quadraticCurveTo(fx, fy - fh * 0.25, fx - fw, fy);
+                  ctx.fill();
+                }
+                for (let k = 0; k < 5; k++) {
+                  const ph = (now * 0.65 + k / 5 + d.v) % 1;
+                  ctx.globalAlpha = 0.85 * (1 - ph);
+                  ctx.fillStyle = k % 2 ? "#ffcc44" : "#ff7a20";
+                  ctx.beginPath();
+                  ctx.arc(x + Math.sin(ph * 6 + k + d.v) * 6 * u, y - 10 * u - ph * 26 * u, 1.2 * u, 0, Math.PI * 2);
+                  ctx.fill();
+                }
+                for (let k = 0; k < 4; k++) {
+                  const ph = (now * 0.3 + k / 4 + d.v * 0.5) % 1;
+                  ctx.globalAlpha = 0.35 * (1 - ph);
+                  ctx.fillStyle = k % 2 ? "#3a3a3a" : "#666";
+                  ctx.beginPath();
+                  ctx.arc(x + Math.sin(ph * 4 + k) * 5 * u, y - 16 * u - ph * 28 * u, (2 + ph * 6) * u, 0, Math.PI * 2);
+                  ctx.fill();
+                }
+                ctx.globalAlpha = 1;
               } else {
                 const g1 = d.v < 0.5 ? "#2f6b2a" : "#3d7a2c", g2 = d.v < 0.5 ? "#4f9a3a" : "#68a83c";
                 ctx.fillStyle = g1;
@@ -2885,6 +2922,31 @@
             c.restore();
           }
         }
+        function ridgeLit(c, w, yAt, col, sc) {
+          c.strokeStyle = col;
+          c.lineWidth = Math.max(2, 3.2 * sc);
+          c.lineJoin = "round";
+          c.beginPath();
+          for (let x = 0; x <= w; x += 3) {
+            const y = yAt(x) + 1;
+            if (x === 0) c.moveTo(0, y);
+            else c.lineTo(x, y);
+          }
+          c.stroke();
+        }
+        function hillGrass(c, w, yAt, sc, col) {
+          c.strokeStyle = col;
+          c.lineCap = "round";
+          for (let x = 1; x < w; x += 1.5 + hsh(x, 41) * 2.5) {
+            const y = yAt(x);
+            const hh = (2 + hsh(x, 42) * 6) * sc;
+            c.lineWidth = Math.max(0.8, 1.1 * sc);
+            c.beginPath();
+            c.moveTo(x, y + 0.5);
+            c.lineTo(x + (hsh(x, 43) - 0.5) * 2.2 * sc, y - hh);
+            c.stroke();
+          }
+        }
         function paintSky(kind) {
           const key = `${W}x${H}:${kind}:${dpr}`;
           if (key === skyKey) return;
@@ -2923,13 +2985,21 @@
             }
           }
           // hazy hills, far to near
-          const hills = night ? ["#151a3c", "#10142e", "#0b0e22"] : dark ? ["#16121c", "#110e16", "#0c0a10"] : ["#8a5a8e", "#5c3e78", "#3a2a5a"];
+          // day: grassy hills in sunset light (far cooler sage, near richer green); night/black stay as silhouettes
+          const hills = night ? ["#151a3c", "#10142e", "#0b0e22"] : dark ? ["#16121c", "#110e16", "#0c0a10"] : ["#8aa86a", "#5c8a3c", "#3a6a24"];
+          const hillLit = night ? ["#1c2250", "#161a3c", "#10142e"] : dark ? ["#1c1824", "#16121c", "#110e16"] : ["#c2d47a", "#8fbc4a", "#6a9a32"];
           const sc = Math.max(0.7, Math.min(w, h) / 400);
-          ridge(c, w, h, h * 0.62, h * 0.22, 7, 1.3, hills[0]);
+          const y1 = ridge(c, w, h, h * 0.62, h * 0.22, 7, 1.3, hills[0]);
+          if (!night && !dark) ridgeLit(c, w, y1, hillLit[0], sc);
           const y2 = ridge(c, w, h, h * 0.72, h * 0.16, 11, 4.1, hills[1]);
-          ridgeProps(c, w, y2, sc, hills[1], 11, 1);
+          if (!night && !dark) ridgeLit(c, w, y2, hillLit[1], sc);
+          ridgeProps(c, w, y2, sc, night || dark ? hills[1] : "#2f5a22", 11, 1);
           const y3 = ridge(c, w, h, h * 0.82, h * 0.12, 17, 2.7, hills[2]);
-          ridgeProps(c, w, y3, sc * 1.5, hills[2], 23, 2);
+          if (!night && !dark) {
+            ridgeLit(c, w, y3, hillLit[2], sc * 1.2);
+            hillGrass(c, w, y3, sc * 1.5, "#4a8a28");
+          }
+          ridgeProps(c, w, y3, sc * 1.5, night || dark ? hills[2] : "#244a18", 23, 2);
           if (!dark && !night) {
             // a little mist at the horizon line
             const m = c.createLinearGradient(0, h * 0.6, 0, h);
@@ -5002,6 +5072,9 @@
             seed(n) { rngSeed(n == null ? null : n >>> 0); return true; },
             weapons: () => WEAPONS.map((w, i) => ({ i, name: w.name, kind: w.kind, price: w.price || 0 })),
             items: () => ITEMS.map((it, k) => ({ k, id: it.id, name: it.name, price: it.price })),
+            decor: () => decor.map((d) => ({ t: d.t, x: d.x, burnt: !!d.burnt })),
+            // mark every tree (and bush) as burning so tests can screenshot the modern fire look
+            burnTrees() { decor.forEach((d) => { if (d.t === "tree" || d.t === "bush") d.burnt = true; }); return decor.filter((d) => d.burnt).length; },
             // aim the current tank; returns false when it is not a human's turn here
             aim(o) {
               if (state !== "play" || busy || !isMyTurn()) return false;
