@@ -6,33 +6,34 @@ video (the file is large, and it is not committed).
 
 ## Outputs (not in git)
 
-Built into `/workspace/scorched-trailer/` (override with `OUT=`):
+Built into `/workspace/scorched-trailer/` (override with `OUT=`). The v2 take
+(generic lobby names, human winner) is in `/workspace/scorched-trailer/v2/`:
 
 | File | What |
 |---|---|
 | `scorched-trailer-30s.mp4` | Landscape trailer, 1920×1080, 30 fps, H.264 `yuv420p` + AAC |
 | `scorched-trailer-30s-vertical.mp4` | 9:16 cut, 1080×1920, same codecs (16:9 gameplay letterboxed over a blurred copy, then a portrait title card) |
-| `frames/01-hook.png`, `02-mirv.png`, `03-lobby.png`, `04-title.png` | Review stills |
+| `frames/01-hook.png`, `02-mirv.png`, `03-napalm.png`, `04-lobby.png`, `05-win.png`, `06-title.png` | Review stills |
 | `raw/` | Playwright recordings, WebAudio capture, `edit.json` |
 
-This take (2026-11-17, Asia/Jerusalem): landscape **31.23 s**, 1920×1080, 30 fps,
+v2 take (2026-11-17, Asia/Jerusalem): landscape **30.47 s**, 1920×1080, 30 fps,
 H.264 High / yuv420p, AAC 48 kHz stereo.
 
-## Shot list (this take)
+## Shot list (v2 take)
 
 Times are in the finished landscape file.
 
 | Time | Shot |
 |---|---|
-| 0.0–5.0 s | **Hook.** Player 1 fires a Nuke on a sunset mountain map with six tanks. The shell flies a high arc; a full-screen blast erupts on the left slope; a wrecked tank says “I'll be back…” |
-| 5.0–6.9 s | **MIRV.** The missile splits into five warheads that rain onto the right ridge and detonate together (white / orange / red). |
-| 6.9–10.4 s | **Napalm.** A high arc over the peak; fire burns on the right slope. |
-| 10.4–14.6 s | **Roller.** The shot lands in the valley and rolls downhill along the terrain. |
-| 14.6–18.1 s | **Digger.** A shell hits the central ridge and blows a tunnel through the dirt. |
-| 18.1–21.5 s | **Shop.** The between-rounds shop, buying Nuke, MIRV, Napalm, Roller and Digger (starting cash $10,000). |
-| 21.5–24.6 s | **Online lobby.** A local (not production) room, code `EXWK`, with two players: Yishai (host) and Maayan, and Start Game. |
-| 24.6–27.0 s | **Round result.** The end-of-round card (this take: “Shooter 4 wins” — a CPU; see notes). |
-| 27.0–31.2 s | **Title card.** The Play icon, “SCORCHED TANKS”, the English tagline from `marketing/COPY.md` (“Aim. Fire. Scorch the earth.”), and the plain text “Google Play” (no official badge artwork). |
+| 0.0–5.3 s | **Hook.** Player 1 fires a Nuke on a sunset mountain map with six tanks. The shell flies a high arc; a full-screen blast erupts on the left slope; a wrecked tank says “I'll be back…” |
+| 5.3–7.6 s | **MIRV.** The missile splits into five warheads that rain onto the right ridge and detonate together (white / orange / red). |
+| 7.6–12.2 s | **Hot Napalm.** A high arc onto the central peak; fire flows down the slope (punched in 1.55× so the flames are readable). |
+| 12.2–13.9 s | **Roller.** A short, nearly-horizontal roller hit (this take is not a long downhill roll). |
+| 13.9–17.3 s | **Digger.** A shell hits the central ridge and blows a tunnel through the dirt. |
+| 17.3–20.7 s | **Shop.** The between-rounds shop, buying Nuke, MIRV, Hot Napalm, Roller and Digger. |
+| 20.7–23.8 s | **Online lobby.** A local (not production) room, code `ANRV`, with two generic players: Commander (host) and Gunner, and Start Game. Never use real names. |
+| 23.8–26.2 s | **Round result.** “Player 1 wins” — the human, not a CPU. |
+| 26.2–30.5 s | **Title card.** The Play icon, “SCORCHED TANKS”, the English tagline from `marketing/COPY.md` (“Aim. Fire. Scorch the earth.”), and the plain text “Google Play” (no official badge artwork). |
 
 ## Audio
 
@@ -55,18 +56,23 @@ e2e toolchain:
 cd tests/e2e && npm ci && npx playwright install chromium && cd ../..
 
 # 1. Record real gameplay (headless Chromium / Playwright) + local lobby
-OUT=/workspace/scorched-trailer node tools/trailer/record.mjs
+OUT=/workspace/scorched-trailer/v2 node tools/trailer/record.mjs
 
 # 2. Cut, title card, mux, vertical cut, review frames
-OUT=/workspace/scorched-trailer tools/trailer/make.sh
+OUT=/workspace/scorched-trailer/v2 tools/trailer/make.sh
 ```
 
 `record.mjs` serves `game/` locally, opens `index.html?test=1` at 1920×1080,
 and drives the opt-in test hook (`window.__ST_TEST__`) to start a 6-tank CPU
 match (Mountains, Gradient sky, no wind, seed 20261117), shop for the big
-weapons, fire them, and hold the result screen. The optional lobby uses
-`tests/e2e/support/worker-dev.mjs` (local wrangler, never production). Set
-`ST_SKIP_LOBBY=1` to skip it.
+weapons, fire them, and hold the result screen. Lobby display names are
+generic (`Commander` / `Gunner`) via `localStorage.st-name`. The optional
+lobby uses `tests/e2e/support/worker-dev.mjs` (local wrangler, never
+production). Set `ST_SKIP_LOBBY=1` to skip it.
+
+While serving `game/index.html`, the recorder injects a recording-only test-hook
+helper `forceHumanWin()` so the result card shows the living human (Player 1),
+not a CPU. The on-disk game file is not modified.
 
 `make.sh` reads `raw/edit.json`. Weapon windows are offsets from each fire,
 because `waitSettled` can stay busy through later CPU turns; the offsets in
@@ -81,10 +87,17 @@ is `marketing/play-icon-512.png`).
 - The video files are **not committed**. Only the scripts and this document live
   in the repo.
 - This is not a YouTube upload and not a Play publish.
-- On this take the result card shows a CPU winner (“Shooter 4”). The showcase
-  shots were fired by the human; the rest of the round was fast-forwarded so
-  the result screen could be captured.
-- Napalm is visible but small (a patch of fire on the right slope).
+- Recorded from the repo's `release/v1.17` build (a version bump of the 1.16
+  gameplay). It does not include Play-listing 1.17 features that are not in
+  this repo (age-group selection, parent PIN, safety reminder).
+- The result card is “Player 1 wins” (human). The leftover HUD may still show
+  the last CPU name; death-taunt bubbles can overlap the card. The winner line
+  is the human.
+- Hot Napalm is punched in (1.55×, framed on the central peak) so the fire is
+  readable. The weapon itself is a stream of droplets, not a full-screen blaze.
+- The roller in this take is a short, nearly-horizontal hit, not a long
+  downhill roll.
 - The 9:16 cut letterboxes the 16:9 playfield; it is not a tight vertical crop.
 - Playwright recorded the raw capture at 25 fps; the finished files are 30 fps.
-- `?test=1` enables the hook only. It does not change what is drawn.
+- `?test=1` enables the hook only. It does not change what is drawn, aside from
+  the recording-only `forceHumanWin` helper described above.

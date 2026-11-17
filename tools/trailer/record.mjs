@@ -43,7 +43,22 @@ async function serveGame() {
       if (p === "/" || p === "/play") p = "/index.html";
       const f = normalize(join(root, p));
       if (!f.startsWith(root)) { res.writeHead(403).end(); return; }
-      const body = await readFile(f);
+      let body = await readFile(f);
+      // Recording-only: add a test-hook helper that ends the round with the
+      // living human as the winner. The on-disk game/index.html is not changed.
+      if (/\/index\.html$/.test(f)) {
+        const needle = "window.__ST_TEST__ = Object.freeze({";
+        const inject = `window.__ST_TEST__ = Object.freeze({
+            forceHumanWin() {
+              const human = tanks.find((t) => t.health > 0 && !t.p.cpu);
+              if (!human) return { ok: false, reason: "no living human" };
+              for (const t of tanks) { if (t !== human) t.health = 0; }
+              gameOver(human);
+              return { ok: true, winner: human.name, type: human.p.type };
+            },`;
+        const html = body.toString("utf8");
+        if (html.includes(needle)) body = Buffer.from(html.replace(needle, inject));
+      }
       res.writeHead(200, { "content-type": TYPES[extname(f)] || "application/octet-stream", "cache-control": "no-store" });
       res.end(body);
     } catch (e) {
@@ -177,6 +192,20 @@ async function fireWeapon(page, name, mode = "tank") {
         if (me.x < s.world.W / 2) angle = Math.min(80, angle + 8);
         else angle = Math.max(100, angle - 8);
       }
+    } else if (mode === "napalm") {
+      // High readable arc toward a mid-field living foe so the fire sits on a slope, not at the edge.
+      const mid = foes.filter((t) => t.x > s.world.W * 0.28 && t.x < s.world.W * 0.82);
+      const target = mid[0] || foes[0];
+      if (target) {
+        const sol = T.solve(target.i);
+        if (sol) {
+          angle = me.x < s.world.W / 2 ? Math.min(82, sol.angle + 12) : Math.max(98, sol.angle - 12);
+          power = Math.max(48, Math.min(82, sol.power - 2));
+        }
+      } else {
+        angle = me.x < s.world.W / 2 ? 72 : 108;
+        power = 64;
+      }
     }
     const aimed = T.aim({ weapon: w.i, angle, power });
     const fired = aimed && T.fire();
@@ -279,7 +308,7 @@ async function main() {
     await page.locator("#shop").waitFor({ state: "visible" });
 
     const weapons = await page.evaluate(() => window.__ST_TEST__.weapons());
-    const want = ["Nuke", "MIRV", "Napalm", "Roller", "Digger"];
+    const want = ["Nuke", "MIRV", "Hot Napalm", "Roller", "Digger"];
     mark("shop_start");
     await sleep(400);
     for (const name of want) {
@@ -303,7 +332,8 @@ async function main() {
     const shots = [
       { id: "hook", weapon: "Nuke", mode: "tank", hang: 1400, still: "still-hook.png" },
       { id: "mirv", weapon: "MIRV", mode: "arc", hang: 800, still: "still-mirv.png" },
-      { id: "napalm", weapon: "Napalm", mode: "hill", hang: 2600, still: "still-napalm.png" },
+      // stillAt: grab the frame mid-burn, before waitSettled lets the fire die out
+      { id: "napalm", weapon: "Hot Napalm", mode: "napalm", hang: 800, stillAt: 4800, still: "still-napalm.png" },
       { id: "roller", weapon: "Roller", mode: "tank", hang: 800, still: "still-roller.png" },
       { id: "digger", weapon: "Digger", mode: "hill", hang: 1200, still: "still-digger.png" },
     ];
@@ -322,33 +352,34 @@ async function main() {
         mark(shot.id + "_end", { failed: true });
         continue;
       }
+      if (shot.stillAt) {
+        await sleep(shot.stillAt);
+        if (shot.still) await page.screenshot({ path: join(RAW, shot.still) });
+      }
       const settled = await page.evaluate((ms) => window.__ST_TEST__.waitSettled(ms), 20000);
       if (settled.timedOut) issues.push(`${shot.weapon} waitSettled timed out`);
-      await sleep(shot.hang);
-      if (shot.still) await page.screenshot({ path: join(RAW, shot.still) });
+      await sleep(shot.hang || 0);
+      if (shot.still && !shot.stillAt) await page.screenshot({ path: join(RAW, shot.still) });
       mark(shot.id + "_end");
     }
 
-    // Finish the round (CPU turns run instantly, not shown) and hold the result screen.
-    await page.evaluate(() => {
+    // End the round with the living human as the winner (never a CPU).
+    const forced = await page.evaluate(() => {
       const T = window.__ST_TEST__;
-      let s = T.state();
-      for (let k = 0; k < 80 && s.state === "play"; k++) {
-        if (s.myTurn) {
-          const me = s.tanks[s.turn];
-          const foes = s.tanks.filter((t) => t.alive && t.i !== s.turn);
-          if (foes[0]) {
-            const sol = T.solve(foes[0].i) || { angle: 45, power: 60 };
-            T.aim({ angle: sol.angle, power: sol.power });
-            T.fire();
-          }
-        }
-        s = T.settle(90);
-      }
+      if (typeof T.forceHumanWin !== "function") return { ok: false, reason: "no forceHumanWin hook" };
+      return T.forceHumanWin();
     });
+    console.log("forceHumanWin", forced);
+    if (!forced || !forced.ok) {
+      issues.push("forceHumanWin failed: " + JSON.stringify(forced));
+    }
     const after = await state(page);
     if (after.screen === "roundOver" || after.state === "over") {
       await page.locator("#win").waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
+      const winText = (after.winText || "") + " " + ((await page.locator("#winText").textContent().catch(() => "")) || "");
+      if (!/Player 1/i.test(winText) || /\b(Shooter|Moron|Poolshark|Tosser|Chooser|Spoiler|Cyborg)\b/i.test(winText)) {
+        issues.push("win screen is not a human winner: " + winText.trim());
+      }
       mark("win_start");
       await sleep(400);
       await page.screenshot({ path: join(RAW, "still-win.png") });
@@ -394,9 +425,10 @@ async function main() {
         const PROD_HOST = "scorched-tanks.yishai-k.workers.dev";
         const WORKER = `127.0.0.1:${WORKER_PORT}`;
         for (const ctx of [lobbyCtx, guestCtx]) {
+          // Generic display names only — never real people in the trailer.
           await ctx.addInitScript((n) => {
             try { localStorage.setItem("st-name", n); localStorage.setItem("st-gfx", "modern"); } catch (e) {}
-          }, ctx === lobbyCtx ? "Yishai" : "Maayan");
+          }, ctx === lobbyCtx ? "Commander" : "Gunner");
           await ctx.routeWebSocket(/^wss?:\/\/scorched-tanks\.yishai-k\.workers\.dev\//, (route) => {
             const u = new URL(route.url());
             const up = new WebSocket(`ws://${WORKER}${u.pathname}${u.search}`);
@@ -435,7 +467,7 @@ async function main() {
         await guest.locator("#vsNet").click();
         await guest.locator("#netCode").fill(code);
         await guest.locator("#netJoinBtn").click();
-        await host.locator("#nlList").filter({ hasText: "Maayan" }).waitFor({ timeout: 15000 });
+        await host.locator("#nlList").filter({ hasText: "Gunner" }).waitFor({ timeout: 15000 });
         const lobbyStart = (Date.now() - lobbyT0) / 1000;
         await sleep(400);
         await host.screenshot({ path: join(RAW, "still-lobby.png") });

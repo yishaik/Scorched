@@ -38,14 +38,15 @@ edit = json.load(open(sys.argv[1]))
 order = ["hook", "mirv", "napalm", "roller", "digger", "shop", "lobby", "win"]
 # (start_offset, end_offset) relative to the recorded clip start
 windows = {
-    "hook":   (0.20, 5.20),   # flight, full-screen nuke blast ~3.8s, death taunt ~5.0s
-    "mirv":   (3.35, 5.25),   # warheads splitting, then the cluster of explosions
-    "napalm": (1.60, 5.10),   # arc over the ridge, fire on the right slope
-    "roller": (7.00, 11.20),  # lands in the valley and rolls downhill
-    "digger": (1.10, 4.60),   # flight, then the tunnel blown through the ridge
-    "shop":   (0.00, 3.40),   # buying Nuke / MIRV / Napalm / Roller / Digger
-    "lobby":  (0.10, 3.20),   # room code + two players in the online lobby
-    "win":    (0.12, 2.50),   # round result card
+    # Offsets for the 2026-11-17 v2 take (seed 20261117). Re-inspect frames if you re-record.
+    "hook":   (0.20, 5.50),   # flight, full-screen nuke blast ~4.0s, "I'll be back" ~5.0s
+    "mirv":   (3.20, 5.50),   # warheads splitting ~4.0s, cluster of explosions ~4.5s
+    "napalm": (3.40, 8.00),   # Hot Napalm lands on the central peak ~4.0s, fire flows to ~8s
+    "roller": (0.10, 1.80),   # this take is a short, nearly-horizontal roller (not a long roll)
+    "digger": (1.20, 4.60),   # flight ~1.5s, tunnel through the ridge ~3.5s
+    "shop":   (0.00, 3.40),   # buying Nuke / MIRV / Hot Napalm / Roller / Digger
+    "lobby":  (0.10, 3.20),   # room code + Commander / Gunner in the online lobby
+    "win":    (0.12, 2.50),   # "Player 1 wins" card
 }
 clips = {c["id"]: c for c in edit["clips"]}
 out = []
@@ -59,6 +60,11 @@ for name in order:
     end = min(base_e, base_s + off_e)
     if end - start < 0.6:
         continue
+    # Punch-in on napalm, framed on the central peak where the fire sits.
+    zoom = 1.55 if name == "napalm" else 1.0
+    # crop_x / crop_y are 0..1 fractions of the leftover after the zoom crop
+    # (0.5, 0.5) is centered; napalm fire is right-of-center, mid-height.
+    crop_x, crop_y = (0.82, 0.36) if name == "napalm" else (0.5, 0.62)
     out.append({
         "id": name,
         "file": c["file"],
@@ -66,7 +72,9 @@ for name in order:
         "end": round(end, 3),
         "duration": round(end - start, 3),
         # No punch-in on the hook: the nuke fireball sits on the left edge.
-        "zoom": 1.0,
+        "zoom": zoom,
+        "crop_x": crop_x,
+        "crop_y": crop_y,
     })
 json.dump({"audioOffsetMs": edit.get("audioOffsetMs") or 0,
            "audio": edit.get("audio"),
@@ -104,10 +112,11 @@ for c in plan["clips"]:
     vf = [f"fps={fps}", "scale=1920:1080:flags=lanczos", "setsar=1"]
     if c.get("zoom", 1) > 1.01:
         z = c["zoom"]
-        # Zoom toward the lower-middle third (the battlefield, under the HUD).
+        cx = c.get("crop_x", 0.5)
+        cy = c.get("crop_y", 0.62)
         vf = [
             f"scale=1920*{z}:1080*{z}:flags=lanczos",
-            f"crop=1920:1080:(in_w-1920)/2:(in_h-1080)*0.62",
+            f"crop=1920:1080:(in_w-1920)*{cx}:(in_h-1080)*{cy}",
             f"fps={fps}",
             "setsar=1",
         ]
@@ -266,18 +275,19 @@ ffmpeg -y -i "$LAND" -i "$WORKDIR/title-1080x1920.png" -filter_complex "
 python3 - "$LAND" "$WORKDIR/title-1080.png" "$OUT/frames" "$LAND_DUR" << 'PY'
 import os, subprocess, sys
 land, title, dest, dur = sys.argv[1], sys.argv[2], sys.argv[3], float(sys.argv[4])
-# pick three moments in the live portion, plus the title card
-# hook blast, MIRV impacts, lobby (just before the title card)
-times = [3.6, 6.5, min(dur - 4.4, 23.5)]
-names = ["01-hook.png", "02-mirv.png", "03-lobby.png"]
+# Review stills: hook, MIRV, napalm fire, lobby (generic names), win (human), title.
+# Times are defaults for this pipeline; re-extract after a new take if cuts shift.
+# hook blast, MIRV impacts, zoomed napalm fire, lobby, Player 1 win
+times = [3.8, 6.6, 9.0, 23.6, 24.8]
+names = ["01-hook.png", "02-mirv.png", "03-napalm.png", "04-lobby.png", "05-win.png"]
 for t, name in zip(times, names):
     out = os.path.join(dest, name)
     subprocess.check_call([
         "ffmpeg", "-y", "-ss", f"{t:.2f}", "-i", land, "-frames:v", "1", "-q:v", "2", out
     ])
     print("frame", out, "t", t)
-subprocess.check_call(["cp", title, os.path.join(dest, "04-title.png")])
-print("frame", os.path.join(dest, "04-title.png"))
+subprocess.check_call(["cp", title, os.path.join(dest, "06-title.png")])
+print("frame", os.path.join(dest, "06-title.png"))
 PY
 
 echo
