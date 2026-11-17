@@ -35,10 +35,15 @@ async function client(browser, name, testInfo) {
   const page = await ctx.newPage();
   page.on("pageerror", (e) => errors.push(`[${name}] pageerror: ${e.message}`));
   page.on("console", (m) => { if (m.type() === "error") errors.push(`[${name}] console.error: ${m.text()}`); });
-  await page.addInitScript((n) => { if (!localStorage.getItem("st-name")) localStorage.setItem("st-name", n); }, name);
+  await page.addInitScript((n) => {
+    if (!localStorage.getItem("st-name")) localStorage.setItem("st-name", n);
+    if (!localStorage.getItem("st-age")) localStorage.setItem("st-age", "adult");
+  }, name);
   await page.goto("/index.html?test=1");
   await page.locator("#title").click();
+  if (await page.locator("#ageGate").isVisible()) await page.locator("#ageAdult").click();
   await page.locator("#vsNet").click();
+  if (await page.locator("#safetyDlg").isVisible()) await page.locator("#safetyOk").click();
   await expect(page.locator("#netOnline")).toBeVisible();
   return { ctx, page, errors, stray, name };
 }

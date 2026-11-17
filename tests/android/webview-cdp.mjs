@@ -83,6 +83,7 @@ try {
     out = await s.evaluate(`(async () => {
       const T = window.__ST_TEST__, $ = (id) => document.getElementById(id), sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       $("title").click(); await sleep(300);
+      if ($("ageGate") && !$("ageGate").hidden) { $("ageAdult").click(); await sleep(300); }
       $("vsCpu").click(); await sleep(300);
       T.seed(777);
       $("startMatch").click(); await sleep(300);
@@ -111,6 +112,8 @@ try {
   } else if (cmd === "unflag") {
     await reload(s, false);
     out = await s.evaluate(INFO);
+  } else if (cmd === "click") {
+    out = await s.evaluate(`(() => { const el = document.getElementById(${JSON.stringify(arg || "")}); if (el && !el.hidden) { el.click(); return { clicked: true, id: ${JSON.stringify(arg || "")} }; } return { clicked: false, id: ${JSON.stringify(arg || "")} }; })()`);
   } else throw new Error("unknown command " + cmd);
   console.log(JSON.stringify(out));
 } finally {

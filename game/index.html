@@ -528,6 +528,24 @@
       .x-gm .x-net-start:disabled { background: #c0c0c0; color: #7a7a7a; border-color: #fff #404040 #404040 #fff; }
       .x-net [hidden] { display: none !important; }
       .x-net-dlg { z-index: 8; }
+
+      /* v1.18: age gate, parent PIN, safety reminder — DOS windows, local only */
+      .x-safe { z-index: 7; }
+      .x-gm .x-age-choice { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; text-align: left; min-height: 56px; }
+      .x-gm .x-age-choice small { font-size: 12px; letter-spacing: 0.02em; color: #303030; font-weight: 400; }
+      .x-pin-dots { display: flex; justify-content: center; gap: 12px; min-height: 22px; }
+      .x-pin-dot { width: 16px; height: 16px; border: 2px solid #000; background: #c0c0c0; }
+      .x-pin-dot.is-on { background: #0000a8; }
+      .x-pin-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .x-gm .x-pin-pad button { min-height: 52px; font-size: 22px; letter-spacing: 0; }
+      .x-pin-err { margin: 0; min-height: 1.2em; font-size: 14px; text-align: center; color: #a00000; }
+      .x-pin-err[hidden] { display: none; }
+      .x-safety-list { margin: 0; padding: 0 0 0 1.2em; font-size: 15px; text-align: left; color: #000; }
+      .x-safety-list li { margin: 0 0 6px; }
+      .x-gm .x-parent-row { display: flex; align-items: center; gap: 10px; text-align: left; min-height: 48px; }
+      .x-parent-row span { flex: 1 1 auto; font-size: 15px; }
+      .x-parent-row small { display: block; font-size: 12px; color: #303030; }
+      .x-parent-row b { flex: 0 0 52px; text-align: center; color: #0000a8; }
       .x-net-btns { display: flex; gap: 10px; flex-wrap: wrap; }
       .x-net-btns button { flex: 1 1 140px; }
       .x-net-toast {
@@ -606,6 +624,68 @@
             <button id="vsCpu">vs Computer</button>
             <button id="vs2p">2 Players</button>
             <button id="vsNet">PLAY ONLINE</button>
+            <button id="parentBtn">PARENT CONTROLS</button>
+          </div>
+        </div>
+
+        <div class="x-gm x-net x-safe" id="ageGate" role="dialog" aria-modal="true" aria-labelledby="ageBar" hidden>
+          <div class="x-gm-box">
+            <div class="x-gm-bar" id="ageBar">HOW OLD ARE YOU?</div>
+            <div class="x-gm-body">
+              <p class="x-gm-note" id="ageNote">This stays on this device. It is never sent anywhere.</p>
+              <button class="x-age-choice" id="ageU13" data-age="u13">UNDER 13<small>Child — online play is locked until a parent says yes</small></button>
+              <button class="x-age-choice" id="ageTeen" data-age="teen">13 TO 17<small>Teen — online play with a safety reminder</small></button>
+              <button class="x-age-choice" id="ageAdult" data-age="adult">18 OR OLDER<small>Adult — all features, with a safety reminder online</small></button>
+              <button id="ageBack" hidden>BACK</button>
+            </div>
+          </div>
+        </div>
+        <div class="x-gm x-net x-safe" id="pinGate" role="dialog" aria-modal="true" aria-labelledby="pinBar" aria-describedby="pinMsg" hidden>
+          <div class="x-gm-box">
+            <div class="x-gm-bar" id="pinBar">PARENT PIN</div>
+            <div class="x-gm-body">
+              <p class="x-gm-q" id="pinMsg">Enter the 4-digit PIN</p>
+              <div class="x-pin-dots" id="pinDots" aria-hidden="true"><i class="x-pin-dot"></i><i class="x-pin-dot"></i><i class="x-pin-dot"></i><i class="x-pin-dot"></i></div>
+              <p class="x-pin-err" id="pinErr" role="alert" hidden></p>
+              <div class="x-pin-pad" id="pinPad">
+                <button type="button" data-pin="1">1</button><button type="button" data-pin="2">2</button><button type="button" data-pin="3">3</button>
+                <button type="button" data-pin="4">4</button><button type="button" data-pin="5">5</button><button type="button" data-pin="6">6</button>
+                <button type="button" data-pin="7">7</button><button type="button" data-pin="8">8</button><button type="button" data-pin="9">9</button>
+                <button type="button" id="pinClear">CLEAR</button><button type="button" data-pin="0">0</button><button type="button" id="pinCancel">CANCEL</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="x-gm x-net x-safe" id="parentPanel" role="dialog" aria-modal="true" aria-labelledby="parentBar" hidden>
+          <div class="x-gm-box">
+            <div class="x-gm-bar" id="parentBar">PARENT CONTROLS</div>
+            <div class="x-gm-body">
+              <p class="x-gm-note">These settings stay on this device. They are never sent to the server.</p>
+              <p class="x-parent-row" id="parentAgeRow"><span>Age group<small id="parentAge">—</small></span></p>
+              <button class="x-parent-row" id="parentOnline" role="switch" aria-checked="false"><span>Allow online play<small>Off by default under 13</small></span><b id="parentOnlineV">[OFF]</b></button>
+              <button class="x-parent-row" id="parentCodes" role="switch" aria-checked="false"><span>Restrict room codes<small>Hide Quick Match, joining by code, and Share</small></span><b id="parentCodesV">[OFF]</b></button>
+              <button id="parentChangeAge">CHANGE AGE GROUP</button>
+              <button id="parentChangePin">CHANGE PIN</button>
+              <button id="parentDone">DONE</button>
+            </div>
+          </div>
+        </div>
+        <div class="x-gm x-net x-safe" id="safetyDlg" role="dialog" aria-modal="true" aria-labelledby="safetyBar" hidden>
+          <div class="x-gm-box">
+            <div class="x-gm-bar" id="safetyBar">BEFORE YOU PLAY ONLINE</div>
+            <div class="x-gm-body">
+              <p class="x-gm-q">A short safety reminder</p>
+              <ul class="x-safety-list">
+                <li>Do not share your real name, address, school, phone number or any other personal information.</li>
+                <li>Play with people you know when you can.</li>
+                <li>Room codes are like invitations — only share them with people you trust.</li>
+                <li>If something feels wrong, leave the game and tell a parent or a trusted adult.</li>
+              </ul>
+              <div class="x-net-btns">
+                <button id="safetyBack">BACK</button>
+                <button id="safetyOk" class="x-gm-red">I UNDERSTAND</button>
+              </div>
+            </div>
           </div>
         </div>
         <div class="x-gm x-net" id="netOnline" role="dialog" aria-modal="true" aria-labelledby="noTitle" hidden>
@@ -840,7 +920,7 @@
     <script>
       // online: JSON over WebSocket to the Scorched Tanks server
       const NET_BASE = "scorched-tanks.yishai-k.workers.dev";
-      const GAME_VER = "1.16";
+      const GAME_VER = "1.18";
       // online protocol revision, separate from GAME_VER: 1 = v1.15 and older (no proto param), 2 = rejoin tokens + room size
       const NET_PROTO = 2;
       (function () {
@@ -1668,8 +1748,45 @@
                 ctx.moveTo(x, y - 13 * u); ctx.lineTo(x + 5 * u, y - 20 * u);
                 ctx.moveTo(x, y - 16 * u); ctx.lineTo(x - 2 * u, y - 23 * u);
                 ctx.stroke();
-                ctx.fillStyle = "#ff6a1a"; ctx.globalAlpha = 0.5 + 0.5 * Math.sin(performance.now() / 300 + d.v * 9);
-                ctx.fillRect(x - 0.8 * u, y - 9 * u, 1.6 * u, 1.6 * u); ctx.globalAlpha = 1;
+                const now = performance.now() / 1000;
+                const flicker = 0.65 + 0.35 * Math.sin(now * 8 + d.v * 9);
+                const gx = x, gyb = y - 12 * u;
+                const gl = ctx.createRadialGradient(gx, gyb, 1, gx, gyb, 18 * u);
+                gl.addColorStop(0, "rgba(255,180,40," + (0.5 * flicker) + ")");
+                gl.addColorStop(1, "rgba(255,80,0,0)");
+                ctx.fillStyle = gl;
+                ctx.beginPath(); ctx.arc(gx, gyb, 18 * u, 0, Math.PI * 2); ctx.fill();
+                const cols = ["#ffee66", "#ffd23a", "#ff8a1a", "#ff5a10", "#ff3a10"];
+                for (let k = 0; k < 5; k++) {
+                  const fh = (9 + k * 3 + Math.sin(now * 7 + k + d.v) * 2.2) * u;
+                  const fw = (2.8 + k * 0.45) * u;
+                  const fx = x + (hsh(k + 3, d.v * 40) - 0.5) * 8 * u;
+                  const fy = y - (7 + k * 1.4) * u;
+                  ctx.globalAlpha = 0.8 * flicker;
+                  ctx.fillStyle = cols[k];
+                  ctx.beginPath();
+                  ctx.moveTo(fx - fw, fy);
+                  ctx.quadraticCurveTo(fx, fy - fh, fx + fw, fy);
+                  ctx.quadraticCurveTo(fx, fy - fh * 0.25, fx - fw, fy);
+                  ctx.fill();
+                }
+                for (let k = 0; k < 5; k++) {
+                  const ph = (now * 0.65 + k / 5 + d.v) % 1;
+                  ctx.globalAlpha = 0.85 * (1 - ph);
+                  ctx.fillStyle = k % 2 ? "#ffcc44" : "#ff7a20";
+                  ctx.beginPath();
+                  ctx.arc(x + Math.sin(ph * 6 + k + d.v) * 6 * u, y - 10 * u - ph * 26 * u, 1.2 * u, 0, Math.PI * 2);
+                  ctx.fill();
+                }
+                for (let k = 0; k < 4; k++) {
+                  const ph = (now * 0.3 + k / 4 + d.v * 0.5) % 1;
+                  ctx.globalAlpha = 0.35 * (1 - ph);
+                  ctx.fillStyle = k % 2 ? "#3a3a3a" : "#666";
+                  ctx.beginPath();
+                  ctx.arc(x + Math.sin(ph * 4 + k) * 5 * u, y - 16 * u - ph * 28 * u, (2 + ph * 6) * u, 0, Math.PI * 2);
+                  ctx.fill();
+                }
+                ctx.globalAlpha = 1;
               } else {
                 const g1 = d.v < 0.5 ? "#2f6b2a" : "#3d7a2c", g2 = d.v < 0.5 ? "#4f9a3a" : "#68a83c";
                 ctx.fillStyle = g1;
@@ -2805,6 +2922,31 @@
             c.restore();
           }
         }
+        function ridgeLit(c, w, yAt, col, sc) {
+          c.strokeStyle = col;
+          c.lineWidth = Math.max(2, 3.2 * sc);
+          c.lineJoin = "round";
+          c.beginPath();
+          for (let x = 0; x <= w; x += 3) {
+            const y = yAt(x) + 1;
+            if (x === 0) c.moveTo(0, y);
+            else c.lineTo(x, y);
+          }
+          c.stroke();
+        }
+        function hillGrass(c, w, yAt, sc, col) {
+          c.strokeStyle = col;
+          c.lineCap = "round";
+          for (let x = 1; x < w; x += 1.5 + hsh(x, 41) * 2.5) {
+            const y = yAt(x);
+            const hh = (2 + hsh(x, 42) * 6) * sc;
+            c.lineWidth = Math.max(0.8, 1.1 * sc);
+            c.beginPath();
+            c.moveTo(x, y + 0.5);
+            c.lineTo(x + (hsh(x, 43) - 0.5) * 2.2 * sc, y - hh);
+            c.stroke();
+          }
+        }
         function paintSky(kind) {
           const key = `${W}x${H}:${kind}:${dpr}`;
           if (key === skyKey) return;
@@ -2843,13 +2985,21 @@
             }
           }
           // hazy hills, far to near
-          const hills = night ? ["#151a3c", "#10142e", "#0b0e22"] : dark ? ["#16121c", "#110e16", "#0c0a10"] : ["#8a5a8e", "#5c3e78", "#3a2a5a"];
+          // day: grassy hills in sunset light (far cooler sage, near richer green); night/black stay as silhouettes
+          const hills = night ? ["#151a3c", "#10142e", "#0b0e22"] : dark ? ["#16121c", "#110e16", "#0c0a10"] : ["#8aa86a", "#5c8a3c", "#3a6a24"];
+          const hillLit = night ? ["#1c2250", "#161a3c", "#10142e"] : dark ? ["#1c1824", "#16121c", "#110e16"] : ["#c2d47a", "#8fbc4a", "#6a9a32"];
           const sc = Math.max(0.7, Math.min(w, h) / 400);
-          ridge(c, w, h, h * 0.62, h * 0.22, 7, 1.3, hills[0]);
+          const y1 = ridge(c, w, h, h * 0.62, h * 0.22, 7, 1.3, hills[0]);
+          if (!night && !dark) ridgeLit(c, w, y1, hillLit[0], sc);
           const y2 = ridge(c, w, h, h * 0.72, h * 0.16, 11, 4.1, hills[1]);
-          ridgeProps(c, w, y2, sc, hills[1], 11, 1);
+          if (!night && !dark) ridgeLit(c, w, y2, hillLit[1], sc);
+          ridgeProps(c, w, y2, sc, night || dark ? hills[1] : "#2f5a22", 11, 1);
           const y3 = ridge(c, w, h, h * 0.82, h * 0.12, 17, 2.7, hills[2]);
-          ridgeProps(c, w, y3, sc * 1.5, hills[2], 23, 2);
+          if (!night && !dark) {
+            ridgeLit(c, w, y3, hillLit[2], sc * 1.2);
+            hillGrass(c, w, y3, sc * 1.5, "#4a8a28");
+          }
+          ridgeProps(c, w, y3, sc * 1.5, night || dark ? hills[2] : "#244a18", 23, 2);
           if (!dark && !night) {
             // a little mist at the horizon line
             const m = c.createLinearGradient(0, h * 0.6, 0, h);
@@ -3328,8 +3478,10 @@
         const titleEl = document.getElementById("title");
         const leaveTitle = () => {
           if (state !== "title") return;
-          state = "menu"; fw = []; titleEl.hidden = true; menu.hidden = false; makeTerrain();
-          refreshContinue();
+          fw = [];
+          titleEl.hidden = true;
+          if (!cleanAge(readAge())) { state = "age"; showAgeGate(false); return; }
+          showMainMenu();
         };
         titleEl.addEventListener("click", leaveTitle);
         titleEl.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); leaveTitle(); } });
@@ -3627,7 +3779,9 @@
           nickIn.value = Net.name;
           if (code) codeIn.value = code;
           syncJoin();
-          (code ? joinBtn : byId("netQuickBtn")).focus({ preventScroll: true });
+          applyCodeRestrict();
+          const focusEl = (code && !isRestrictCodes()) ? joinBtn : (isRestrictCodes() ? createBtn : byId("netQuickBtn"));
+          focusEl.focus({ preventScroll: true });
         }
         function closeOnline() {
           Net.leave(); stopCountdown(); netShow(null);
@@ -3686,6 +3840,7 @@
           byId("nlCode").textContent = code || "----";
           netShow("lobby");
           renderLobby();
+          applyCodeRestrict();
         }
         function renderLobby() {
           const r = Net.roster, me = Net.pid;
@@ -4504,7 +4659,264 @@
           Net.leave(); stopCountdown();
           dosAlert(msg, () => openOnline());
         };
-        byId("vsNet").onclick = () => openOnline();
+        // ---- v1.18 on-device age gate, parent PIN and safety reminder (localStorage only; no network) ----
+        const AGE_KEY = "st-age", PIN_KEY = "st-pin", ONLINE_KEY = "st-allow-online", CODES_KEY = "st-restrict-codes";
+        function cleanAge(v) {
+          return v === "u13" || v === "teen" || v === "adult" ? v : "";
+        }
+        function hashPin(pin) {
+          const s = "st-pin-v1:" + String(pin);
+          let h = 2166136261 >>> 0;
+          for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619) >>> 0;
+          return ("00000000" + h.toString(16)).slice(-8);
+        }
+        function ageDefaults(age) {
+          const a = cleanAge(age);
+          return { allowOnline: a !== "u13", restrictCodes: a === "u13" };
+        }
+        function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+        function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } }
+        function readAge() { return cleanAge(lsGet(AGE_KEY)); }
+        function hasPin() { const h = lsGet(PIN_KEY); return !!(h && /^[0-9a-f]{8}$/.test(h)); }
+        function checkPin(pin) { return hasPin() && lsGet(PIN_KEY) === hashPin(String(pin)); }
+        function savePin(pin) { return lsSet(PIN_KEY, hashPin(String(pin))); }
+        function isOnlineAllowed() {
+          const a = readAge();
+          if (!a) return false;
+          const raw = lsGet(ONLINE_KEY);
+          if (raw === "0") return false;
+          if (raw === "1") return true;
+          return ageDefaults(a).allowOnline;
+        }
+        function isRestrictCodes() {
+          const a = readAge();
+          const raw = lsGet(CODES_KEY);
+          if (raw === "1") return true;
+          if (raw === "0") return false;
+          return ageDefaults(a).restrictCodes;
+        }
+        function setAllowOnline(on) { lsSet(ONLINE_KEY, on ? "1" : "0"); }
+        function setRestrictCodes(on) { lsSet(CODES_KEY, on ? "1" : "0"); }
+        function saveAge(age) {
+          const a = cleanAge(age);
+          if (!a) return "";
+          lsSet(AGE_KEY, a);
+          const d = ageDefaults(a);
+          if (lsGet(ONLINE_KEY) == null) lsSet(ONLINE_KEY, d.allowOnline ? "1" : "0");
+          if (lsGet(CODES_KEY) == null) lsSet(CODES_KEY, d.restrictCodes ? "1" : "0");
+          if (a === "u13") {
+            // choosing the child group always re-locks online until a parent turns it back on
+            lsSet(ONLINE_KEY, "0");
+            if (lsGet(CODES_KEY) == null) lsSet(CODES_KEY, "1");
+          }
+          return a;
+        }
+        const ageEl = byId("ageGate"), pinEl = byId("pinGate"), parentEl = byId("parentPanel"), safetyEl = byId("safetyDlg");
+        let pendingJoin = null, pendingAutoJoin = false, pinWait = null, safetyWait = null, ageChanging = false;
+        function hideSafe() {
+          ageEl.hidden = true; pinEl.hidden = true; parentEl.hidden = true; safetyEl.hidden = true;
+        }
+        function showMainMenu() {
+          hideSafe();
+          state = "menu";
+          titleEl.hidden = true;
+          menu.hidden = false;
+          makeTerrain();
+          refreshContinue();
+        }
+        function showAgeGate(changing) {
+          ageChanging = !!changing;
+          byId("ageBack").hidden = !ageChanging;
+          hideSafe();
+          ageEl.hidden = false;
+          byId("ageU13").focus({ preventScroll: true });
+        }
+        function afterAgeChosen(age) {
+          if (age === "u13" && !hasPin()) {
+            openPin("set", "Ask a parent to set a 4-digit PIN. You will need it to change these settings or to allow online play.", function () {
+              finishAge(age);
+            }, function () {
+              showAgeGate(ageChanging);
+            });
+            return;
+          }
+          finishAge(age);
+        }
+        function finishAge(age) {
+          if (ageChanging && age === "u13") setAllowOnline(false);
+          saveAge(age);
+          if (ageChanging) { ageChanging = false; openParentPanel(true); return; }
+          const code = pendingJoin;
+          if (code) { tryOpenOnline(code, pendingAutoJoin); return; }
+          showMainMenu();
+        }
+        ["ageU13", "ageTeen", "ageAdult"].forEach(function (id) {
+          byId(id).onclick = function () { afterAgeChosen(byId(id).getAttribute("data-age")); };
+        });
+        byId("ageBack").onclick = function () { ageChanging = false; openParentPanel(true); };
+        function renderPin() {
+          const n = pinWait ? pinWait.buf.length : 0;
+          const dots = byId("pinDots").children;
+          for (let i = 0; i < dots.length; i++) {
+            if (i < n) dots[i].classList.add("is-on");
+            else dots[i].classList.remove("is-on");
+          }
+        }
+        function openPin(mode, msg, onOk, onCancel) {
+          pinWait = { mode: mode, buf: "", first: "", onOk: onOk, onCancel: onCancel };
+          byId("pinMsg").textContent = msg || (mode === "set" ? "Choose a 4-digit PIN" : "Enter the 4-digit PIN");
+          byId("pinErr").hidden = true; byId("pinErr").textContent = "";
+          hideSafe();
+          pinEl.hidden = false;
+          renderPin();
+        }
+        function closePin() { pinEl.hidden = true; pinWait = null; }
+        function pinError(t) {
+          byId("pinErr").textContent = t;
+          byId("pinErr").hidden = false;
+          if (pinWait) pinWait.buf = "";
+          renderPin();
+        }
+        function pinDigit(d) {
+          if (!pinWait || pinWait.buf.length >= 4) return;
+          pinWait.buf += d;
+          renderPin();
+          if (pinWait.buf.length === 4) pinSubmit();
+        }
+        function pinSubmit() {
+          if (!pinWait || pinWait.buf.length !== 4) return;
+          const b = pinWait.buf;
+          if (pinWait.mode === "set") {
+            pinWait.first = b;
+            pinWait.mode = "set2";
+            pinWait.buf = "";
+            byId("pinMsg").textContent = "Type the same PIN again";
+            byId("pinErr").hidden = true;
+            renderPin();
+            return;
+          }
+          if (pinWait.mode === "set2") {
+            if (b !== pinWait.first) { pinError("Those PINs did not match. Try again."); pinWait.mode = "set"; pinWait.first = ""; byId("pinMsg").textContent = "Choose a 4-digit PIN"; return; }
+            savePin(b);
+            const ok = pinWait.onOk;
+            closePin();
+            if (ok) ok();
+            return;
+          }
+          if (!checkPin(b)) { pinError("Wrong PIN. Try again."); return; }
+          const ok = pinWait.onOk;
+          closePin();
+          if (ok) ok();
+        }
+        byId("pinPad").addEventListener("click", function (e) {
+          const b = e.target.closest("button");
+          if (!b || !pinWait) return;
+          const d = b.getAttribute("data-pin");
+          if (d != null) pinDigit(d);
+        });
+        byId("pinClear").onclick = function () { if (pinWait) { pinWait.buf = ""; byId("pinErr").hidden = true; renderPin(); } };
+        byId("pinCancel").onclick = function () {
+          const c = pinWait && pinWait.onCancel;
+          closePin();
+          if (c) c();
+          else if (!menu.hidden || state === "menu") showMainMenu();
+        };
+        document.addEventListener("keydown", function (e) {
+          if (pinEl.hidden) return;
+          if (e.key >= "0" && e.key <= "9") { e.preventDefault(); pinDigit(e.key); }
+          else if (e.key === "Backspace") { e.preventDefault(); if (pinWait) { pinWait.buf = pinWait.buf.slice(0, -1); renderPin(); } }
+          else if (e.key === "Escape") { e.preventDefault(); byId("pinCancel").click(); }
+          else if (e.key === "Enter") { e.preventDefault(); pinSubmit(); }
+        });
+        function renderParent() {
+          const a = readAge();
+          byId("parentAge").textContent = a === "u13" ? "Under 13" : a === "teen" ? "13 to 17" : a === "adult" ? "18 or older" : "Not set";
+          const on = isOnlineAllowed(), rest = isRestrictCodes();
+          byId("parentOnlineV").textContent = on ? "[ON]" : "[OFF]";
+          byId("parentOnline").setAttribute("aria-checked", on ? "true" : "false");
+          byId("parentCodesV").textContent = rest ? "[ON]" : "[OFF]";
+          byId("parentCodes").setAttribute("aria-checked", rest ? "true" : "false");
+        }
+        function openParentPanel(already) {
+          hideSafe();
+          if (!already) {
+            if (!hasPin()) {
+              openPin("set", "Set a 4-digit parent PIN to protect these settings.", function () { openParentPanel(true); }, function () { showMainMenu(); });
+              return;
+            }
+            openPin("verify", "Enter the parent PIN to open parent controls.", function () { openParentPanel(true); }, function () { showMainMenu(); });
+            return;
+          }
+          renderParent();
+          parentEl.hidden = false;
+          byId("parentDone").focus({ preventScroll: true });
+        }
+        byId("parentBtn").onclick = function () { openParentPanel(false); };
+        byId("parentOnline").onclick = function () { setAllowOnline(!isOnlineAllowed()); renderParent(); };
+        byId("parentCodes").onclick = function () { setRestrictCodes(!isRestrictCodes()); renderParent(); };
+        byId("parentChangeAge").onclick = function () { showAgeGate(true); };
+        byId("parentChangePin").onclick = function () {
+          openPin("set", "Choose a new 4-digit PIN.", function () { openParentPanel(true); }, function () { openParentPanel(true); });
+        };
+        byId("parentDone").onclick = function () { showMainMenu(); };
+        function applyCodeRestrict() {
+          const hide = isRestrictCodes();
+          byId("netQuickBtn").hidden = hide;
+          const joinField = codeIn.closest ? codeIn.closest(".x-net-field") : codeIn.parentNode.parentNode;
+          if (joinField) joinField.hidden = hide;
+          byId("nlShare").hidden = hide;
+          if (hide) byId("nlPub").hidden = true;
+        }
+        function showSafetyThen(fn) {
+          safetyWait = fn;
+          hideSafe();
+          safetyEl.hidden = false;
+          byId("safetyOk").focus({ preventScroll: true });
+        }
+        byId("safetyOk").onclick = function () {
+          safetyEl.hidden = true;
+          const fn = safetyWait; safetyWait = null;
+          if (fn) fn();
+        };
+        byId("safetyBack").onclick = function () {
+          safetyEl.hidden = true; safetyWait = null;
+          pendingJoin = null; pendingAutoJoin = false;
+          showMainMenu();
+        };
+        document.addEventListener("keydown", function (e) {
+          if (safetyEl.hidden) return;
+          if (e.key === "Enter") { e.preventDefault(); byId("safetyOk").click(); }
+          else if (e.key === "Escape") { e.preventDefault(); byId("safetyBack").click(); }
+        });
+        function tryOpenOnline(code, autoJoin) {
+          if (code) { pendingJoin = String(code).toUpperCase(); pendingAutoJoin = !!autoJoin; }
+          else { pendingJoin = null; pendingAutoJoin = false; }
+          if (!cleanAge(readAge())) { state = "age"; titleEl.hidden = true; menu.hidden = true; showAgeGate(false); return; }
+          if (!isOnlineAllowed()) {
+            menu.hidden = true;
+            const ask = function () {
+              setAllowOnline(true);
+              renderParent();
+              showSafetyThen(enterOnlinePending);
+            };
+            if (!hasPin()) {
+              openPin("set", "Ask a parent to set a PIN, then allow online play.", ask, function () { showMainMenu(); });
+            } else {
+              openPin("verify", "Ask a parent to enter the PIN to allow online play.", ask, function () { showMainMenu(); });
+            }
+            return;
+          }
+          menu.hidden = true;
+          showSafetyThen(enterOnlinePending);
+        }
+        function enterOnlinePending() {
+          const code = pendingJoin, autoJoin = pendingAutoJoin;
+          pendingJoin = null; pendingAutoJoin = false;
+          openOnline(code);
+          applyCodeRestrict();
+          if (autoJoin && code) joinBtn.click();
+        }
+        byId("vsNet").onclick = function () { tryOpenOnline(); };
         byId("netBack").onclick = closeOnline;
         nickIn.addEventListener("change", commitName);
         nickIn.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); commitName(); nickIn.blur(); } });
@@ -4586,10 +4998,9 @@
             history.replaceState(history.state, "", u.pathname + u.search);
           } catch (e) {}
           if (netView === "lobby" || netView === "quick" || mode === "online") return;
-          if (state === "title") { state = "menu"; fw = []; titleEl.hidden = true; makeTerrain(); }
-          else if (state !== "menu") return;
-          openOnline(m[1].toUpperCase());
-          joinBtn.click();
+          if (state === "title") { fw = []; titleEl.hidden = true; }
+          else if (state !== "menu" && state !== "age") return;
+          tryOpenOnline(m[1].toUpperCase(), true);
         }
         window.addEventListener("hashchange", deepLink);
 
@@ -4607,6 +5018,10 @@
             return h;
           };
           const screen = () => {
+            if (vis(byId("ageGate"))) return "ageGate";
+            if (vis(byId("pinGate"))) return "pinGate";
+            if (vis(byId("parentPanel"))) return "parentControls";
+            if (vis(byId("safetyDlg"))) return "safety";
             if (vis(titleEl)) return "title";
             if (vis(byId("mapEd"))) return "mapEditor";
             if (vis(byId("mapPick"))) return "mapPicker";
@@ -4636,6 +5051,7 @@
             })),
             players: players.map((p) => ({ name: p.name, type: p.type, cash: p.cash, wins: p.wins, kills: p.kills, stock: p.stock.slice(), items: p.items.slice() })),
             net: mode === "online" || netView ? { view: netView, code: window.Net.code, host: window.Net.isHost(), open: window.Net.open } : null,
+            safety: { age: readAge(), allowOnline: isOnlineAllowed(), restrictCodes: isRestrictCodes(), hasPin: hasPin() },
           });
           // synchronous fast-forward: runs pending CPU decisions at once and steps the physics until a human can act,
           // the round ends, or maxSim seconds of game time pass. Nothing is drawn meanwhile (the next frame draws).
@@ -4656,6 +5072,9 @@
             seed(n) { rngSeed(n == null ? null : n >>> 0); return true; },
             weapons: () => WEAPONS.map((w, i) => ({ i, name: w.name, kind: w.kind, price: w.price || 0 })),
             items: () => ITEMS.map((it, k) => ({ k, id: it.id, name: it.name, price: it.price })),
+            decor: () => decor.map((d) => ({ t: d.t, x: d.x, burnt: !!d.burnt })),
+            // mark every tree (and bush) as burning so tests can screenshot the modern fire look
+            burnTrees() { decor.forEach((d) => { if (d.t === "tree" || d.t === "bush") d.burnt = true; }); return decor.filter((d) => d.burnt).length; },
             // aim the current tank; returns false when it is not a human's turn here
             aim(o) {
               if (state !== "play" || busy || !isMyTurn()) return false;

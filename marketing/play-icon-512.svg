@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- High-res Play icon source. Equivalent to android/app/src/main/res/drawable/ic_launcher.xml
+     (same viewport, path data and fill colors). Rasterize to marketing/play-icon-512.png at 512×512. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 108 108">
+  <path fill="#1A1A6E" d="M0,0h108v108h-108z"/>
+  <path fill="#FF8C00" d="M54,30m-14,0a14,14 0,1 1,28 0a14,14 0,1 1,-28 0"/>
+  <path fill="#2E8B57" d="M0,80 Q27,55 54,72 T108,64 V108 H0 Z"/>
+  <path fill="#E03030" d="M38,62h22v8h-22z M44,56h10v6h-10z"/>
+  <path fill="#E03030" d="M53,57l14,-8l1.5,2.5l-14,8z"/>
+</svg>
