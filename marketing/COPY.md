@@ -49,7 +49,8 @@ No ads. No accounts. Just artillery.
 
 ## Assets (in this folder)
 - feature-graphic.png, 1024×500 (Play Store feature graphic)
+- play-icon-512.png, 512×512 32-bit PNG (Play Store high-res icon). Source: play-icon-512.svg, an SVG equivalent of the Android launcher vector `android/app/src/main/res/drawable/ic_launcher.xml`. Not produced by `tools/render`.
 - screenshot-1-sunset.png, screenshot-2-night.png and screenshot-3-map-builder.png, 1920×1080 (store screenshots)
 - promo-square.png, 1080×1080 (Instagram, WhatsApp, Facebook)
 
-These are rendered from the game's own paint code. Real device screenshots of the shop, lobby and map builder are still needed for the store listing.
+The feature graphic, screenshots and promo square are rendered from the game's own paint code. The Play icon is rasterized from the launcher vector, so it matches the app icon already on device. Real device screenshots of the shop, lobby and map builder are still needed for the store listing. A 30-second gameplay trailer (YouTube URL) is still pending.
