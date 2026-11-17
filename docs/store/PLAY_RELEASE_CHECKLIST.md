@@ -6,8 +6,9 @@ Yishai's explicit OK, given in this project's chat, naming the track (closed tes
 or production) and the artifact.
 
 Current source version: **1.18 / versionCode 18**. The committed sideload APK
-`apk/ScorchedTanks.apk` remains the last published build (**1.16 / versionCode 16**)
-until a signed VC18 AAB/APK replaces it. Play already has 1.17 / VC17, so the next upload must be VC18. Do not commit an unsigned build in its place.
+`apk/ScorchedTanks.apk` is the signed **1.18 / versionCode 18** build (production
+signer). Play already has 1.17 / VC17, so the next Play upload must be the
+signed VC18 AAB. Do not commit an unsigned build in its place.
 
 Related: [DEPLOY.md](../../DEPLOY.md), [RELEASE-SAFETY.md](../RELEASE-SAFETY.md),
 [ANDROID-BUILD.md](../ANDROID-BUILD.md), [CI.md](../CI.md),
@@ -51,13 +52,12 @@ gradle :app:bundleRelease --no-daemon --stacktrace
 Expected output: `android/app/build/outputs/bundle/release/app-release.aab`.
 
 `assembleRelease` with the same variables produces a signed APK, useful for a
-sideload/update check, but the Play upload artifact is the AAB. After a signed
-VC18 AAB (and, if we keep shipping a direct download, a signed VC18 APK) has
-been verified, the APK may be copied to `apk/ScorchedTanks.apk` in a later PR.
-`server/deploy.sh` will refuse to deploy while `APP_VER` and the committed APK
-versionName disagree (when `aapt` is available). That refusal is expected until
-the signed APK is committed; do not bypass it and do not run `server/deploy.sh`
-as part of this prep.
+sideload/update check, but the Play upload artifact is the AAB. The signed
+VC18 APK has been copied to `apk/ScorchedTanks.apk`. `server/deploy.sh` will
+refuse to deploy if `APP_VER` and the committed APK versionName disagree
+(when `aapt` is available). They currently both read 1.18. Do not run
+`server/deploy.sh` as part of Play-upload prep unless a deploy has been
+explicitly requested.
 
 ---
 
@@ -115,14 +115,15 @@ never deploys the Worker.
 The gate reads `versionCode` from the newly built AAB and compares it to the
 committed `apk/ScorchedTanks.apk` (`--last-vc`):
 
-- AAB `versionCode` must equal the `GAME_VER` patch (17) and `versionName`
+- AAB `versionCode` must equal the `GAME_VER` patch (18) and `versionName`
   must equal `GAME_VER` (1.18). A mismatch here is always an error.
 - If AAB `versionCode` **equals** the committed APK's versionCode, that is
   "not a new release": a **warning** on pull requests and pushes, and an
-  **error** when the workflow is dispatched with `release: true`.
+  **error** when the workflow is dispatched with `release: true`. This is
+  the expected state while source and the committed sideload APK are both
+  1.18 / VC18.
 - If AAB `versionCode` is **greater** than the committed APK's, the upgrade-order
-  check passes (this is the expected state on the v1.18 branch: AAB 18 vs
-  published APK 16). Leaving the VC16 APK in the tree is intentional.
+  check passes.
 - If AAB `versionCode` is **lower** than the committed APK's, that is always
   an error.
 
@@ -145,7 +146,7 @@ Locally, once you have an AAB and bundletool:
 node tests/android/store-gate.mjs \
   --aab android/app/build/outputs/bundle/release/app-release.aab \
   --bundletool /path/to/bundletool.jar \
-  --last-vc 16 \
+  --last-vc 18 \
   --strict
 ```
 
