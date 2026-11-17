@@ -38,6 +38,9 @@ export async function openGame(page, query = "") {
 
 export async function toMenu(page) {
   await page.locator("#title").click();
+  // first-launch age gate: existing tests are not about it, so pick 18+
+  const age = page.locator("#ageGate");
+  if (await age.isVisible()) await page.locator("#ageAdult").click();
   await expect(page.locator("#menu")).toBeVisible();
 }
 

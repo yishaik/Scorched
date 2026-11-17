@@ -13,7 +13,7 @@ Start with [DOCS.md](DOCS.md), [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md), [do
 - `tests/` — Node unit tests, Playwright E2E, Android emulator smoke, and `tests/android/store-gate.mjs`.
 - `.github/workflows/ci.yml` — root CI (shell, node, renderer, APK smoke, E2E, emulator, store-gate). Build and test only; it never publishes or deploys.
 - `tools/render/` — deterministic generator for the feature graphic, screenshots and promo square in `marketing/`. The Play high-res icon is separate: `marketing/play-icon-512.svg` / `.png`, rendered from the launcher vector, not from this tool.
-- `docs/store/` — Play release checklist and (on PR #34 / `store/privacy-terms`) privacy, terms and Data safety answers.
+- `docs/store/` — Play release checklist, privacy policy, terms and Data safety answers.
 
 ## Project conventions
 

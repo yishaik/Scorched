@@ -108,6 +108,13 @@ if cdp_forward; then
 fi
 adb shell am start -W -a android.intent.action.VIEW -d "scorchedtanks://join/TEST" "$PKG" | tee -a "$OUT/am.txt"; sleep 6
 alive || fail "app died on scorchedtanks://join/TEST"
+# v1.18: a safety reminder (or the first-launch age gate) may be in front of the online panel
+if cdp_forward; then
+  cdp click ageAdult >/dev/null 2>&1 || true
+  sleep 1
+  cdp click safetyOk >/dev/null 2>&1 || true
+  sleep 2
+fi
 shot 06-deeplink-join-offline
 if cdp_forward; then
   DL="$(cdp info 2>&1)"; echo "$DL" | tee "$OUT/cdp-deeplink.json"

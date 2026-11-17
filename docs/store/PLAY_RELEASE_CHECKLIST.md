@@ -5,15 +5,15 @@ listing, a production track promotion, or a Worker deploy. Publishing still need
 Yishai's explicit OK, given in this project's chat, naming the track (closed testing
 or production) and the artifact.
 
-Current source version: **1.17 / versionCode 17**. The committed sideload APK
+Current source version: **1.18 / versionCode 18**. The committed sideload APK
 `apk/ScorchedTanks.apk` remains the last published build (**1.16 / versionCode 16**)
-until a signed VC17 AAB/APK replaces it. Do not commit an unsigned build in its place.
+until a signed VC18 AAB/APK replaces it. Play already has 1.17 / VC17, so the next upload must be VC18. Do not commit an unsigned build in its place.
 
 Related: [DEPLOY.md](../../DEPLOY.md), [RELEASE-SAFETY.md](../RELEASE-SAFETY.md),
 [ANDROID-BUILD.md](../ANDROID-BUILD.md), [CI.md](../CI.md),
 [TESTING.md](../TESTING.md), [COPY.md](../../marketing/COPY.md).
-Data safety answers live in PR #34 (`docs/store/privacy-terms.md` on branch
-`store/privacy-terms`): https://github.com/yishaik/Scorched/pull/34
+Data safety answers live in `docs/store/privacy-terms.md` (merged from PR #34,
+updated in v1.18 for the on-device age group and parent PIN).
 
 ---
 
@@ -52,7 +52,7 @@ Expected output: `android/app/build/outputs/bundle/release/app-release.aab`.
 
 `assembleRelease` with the same variables produces a signed APK, useful for a
 sideload/update check, but the Play upload artifact is the AAB. After a signed
-VC17 AAB (and, if we keep shipping a direct download, a signed VC17 APK) has
+VC18 AAB (and, if we keep shipping a direct download, a signed VC18 APK) has
 been verified, the APK may be copied to `apk/ScorchedTanks.apk` in a later PR.
 `server/deploy.sh` will refuse to deploy while `APP_VER` and the committed APK
 versionName disagree (when `aapt` is available). That refusal is expected until
@@ -99,7 +99,7 @@ PY
 
 If the printout does not match the pin, discard the AAB. Do not upload it.
 
-Also confirm the bundle's `versionName` is `1.17` and `versionCode` is `17`, and
+Also confirm the bundle's `versionName` is `1.18` and `versionCode` is `18`, and
 that it is not debuggable. The store-gate step below covers this once you have
 bundletool.
 
@@ -116,12 +116,12 @@ The gate reads `versionCode` from the newly built AAB and compares it to the
 committed `apk/ScorchedTanks.apk` (`--last-vc`):
 
 - AAB `versionCode` must equal the `GAME_VER` patch (17) and `versionName`
-  must equal `GAME_VER` (1.17). A mismatch here is always an error.
+  must equal `GAME_VER` (1.18). A mismatch here is always an error.
 - If AAB `versionCode` **equals** the committed APK's versionCode, that is
   "not a new release": a **warning** on pull requests and pushes, and an
   **error** when the workflow is dispatched with `release: true`.
 - If AAB `versionCode` is **greater** than the committed APK's, the upgrade-order
-  check passes (this is the expected state on the v1.17 branch: AAB 17 vs
+  check passes (this is the expected state on the v1.18 branch: AAB 18 vs
   published APK 16). Leaving the VC16 APK in the tree is intentional.
 - If AAB `versionCode` is **lower** than the committed APK's, that is always
   an error.
@@ -132,10 +132,10 @@ enough to run the strict form.
 
 ```bash
 # From a machine with gh, against the release branch (not main):
-gh workflow run CI --repo yishaik/Scorched --ref release/v1.17 -f release=true
+gh workflow run CI --repo yishaik/Scorched --ref release/v1.18 -f release=true
 ```
 
-Or: GitHub → Actions → CI → Run workflow → branch `release/v1.17` → enable
+Or: GitHub → Actions → CI → Run workflow → branch `release/v1.18` → enable
 "Store gate in release mode: versionCode must be strictly greater than the
 published APK's" → Run workflow.
 
@@ -182,7 +182,7 @@ a Play listing or start a closed test, without Yishai doing the Console work
 5. **Content rating.** Complete the IARC questionnaire in Play Console.
    The Data safety / policy draft targets 13+. The official rating is whatever
    the questionnaire returns; do not self-assign a rating in the listing.
-6. **Closed testing track.** Upload the **signed**, verified VC17 AAB to a
+6. **Closed testing track.** Upload the **signed**, verified VC18 AAB to a
    closed testing track, not production. Add testers and run the test.
    `docs/TESTING.md` currently claims that a new *personal* Play developer
    account must run a closed test with at least 12 testers opted in for 14

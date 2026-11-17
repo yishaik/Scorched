@@ -6,15 +6,18 @@ earlier 2026-10-19 v1.11 note.
 
 ## Source state
 
-- `main` is `1f9b913`, **v1.16 / versionCode 16** (`GAME_VER`, `APP_VER`, landing
-  footer, Gradle). Released by PR #32, with the automated test pipeline and
-  old-WebView fixes from PR #33.
-- Branch `release/v1.17` (this work) bumps the same four version sites to
-  **1.17 / versionCode 17**, adds the 512×512 Play icon and
-  `docs/store/PLAY_RELEASE_CHECKLIST.md`. No gameplay changes. The committed
-  sideload APK `apk/ScorchedTanks.apk` is still the last published **VC16**
-  artifact; a signed VC17 AAB/APK is not in the tree and must not be replaced
-  by an unsigned build.
+- `main` is `e052d1a`, **v1.16 / versionCode 16**, after PR #34 (privacy policy
+  and terms at `/privacy` and `/terms`) was merged on 2026-11-17.
+- Branch `release/v1.18` (this work) is **1.18 / versionCode 18**. Play already
+  has a 1.17 / VC17 Early Access build whose source was never checked in, so
+  the next Play upload must be VC18. This branch rebuilds those listing
+  features in-repo: first-launch age-group selection, on-device parent
+  controls with a parent PIN, and a safety reminder before online play. All
+  of it is localStorage only. It also carries the v1.17 Play icon, checklist,
+  trailer pipeline, and the privacy/terms files from main. The committed
+  sideload APK `apk/ScorchedTanks.apk` is still **VC16**; do not replace it
+  with an unsigned build. Store-gate compares the unsigned AAB (18) to that
+  APK (16) and should pass the upgrade-order check.
 - Core gameplay is unchanged: offline 2–10 tanks, 7 CPU types, map editor,
   modern/classic graphics, save/continue, shops, 30+ weapons, destructible
   terrain. Online uses the Cloudflare Worker plus `Lobby`/`Room` Durable
@@ -25,6 +28,22 @@ earlier 2026-10-19 v1.11 note.
   (`https://scorched-tanks.yishai-k.workers.dev`, marketing host
   `https://tanks.yishaik.com`). Do not run `server/deploy.sh` or change the
   live Worker as part of this release-prep work.
+
+## On-device safety settings (v1.18)
+
+Stored only in `localStorage` on the device. Never sent to the Worker or
+included in online room state. No accounts and no new Android permissions.
+
+- `st-age` — `u13`, `teen`, or `adult`. Chosen on first launch (and later from
+  Parent Controls).
+- `st-pin` — 8-hex one-way hash of the 4-digit parent PIN. Required to change
+  settings, and to turn online play on for the under-13 group.
+- `st-allow-online` — `0` or `1`. Under 13 defaults to off; choosing that
+  group always re-locks online until a parent enables it with the PIN.
+- `st-restrict-codes` — `0` or `1`. When on, Quick Match, join-by-code, and
+  Share are hidden. Under 13 defaults to on. There is no in-game chat.
+
+A safety reminder is shown every time before the online panel opens.
 
 ## CI and store-gate (now on main)
 
@@ -40,49 +59,54 @@ minSdk 24, targetSdk ≥ 36, versionCode = `GAME_VER` patch, versionName =
 assets = `game/`. It compares versionCode to the committed
 `apk/ScorchedTanks.apk`. An equal versionCode is a warning on PRs and an
 error when the workflow is dispatched with `release: true`. A higher
-versionCode (v1.17 AAB vs the VC16 APK) is the intended passing state until
-the signed VC17 APK is committed. Details and commands:
+versionCode (v1.18 AAB vs the VC16 APK) is the intended passing state until
+a signed VC18 APK is committed. Play already has VC17, which is not in
+`apk/ScorchedTanks.apk`. Details and commands:
 [PLAY_RELEASE_CHECKLIST.md](store/PLAY_RELEASE_CHECKLIST.md).
 
 ## Open PRs and branches
 
-- **PR #34** — [Privacy policy and terms for Google Play](https://github.com/yishaik/Scorched/pull/34),
-  branch `store/privacy-terms`. Contains `docs/store/privacy-terms.md` (the
-  Data safety answers) plus Worker `/privacy` and `/terms` routes. The PR
-  description says those routes were already deployed to tanks.yishaik.com.
-  **Not merged;** do not merge it as a side effect of the v1.17 work.
-- **`release/v1.17`** — version bump, Play icon, this handoff, the Play
-  checklist. Intended PR to `main`. Do not merge without review. Do not
-  force-push, and do not touch `main` directly.
+- **PR #34** is **merged** into `main` (privacy/terms). The same files are on
+  this branch; the privacy policy now also describes the on-device age group,
+  parent PIN and parent-control settings.
+- **`release/v1.18`** — v1.18 / VC18: age gate, parent PIN, safety reminder,
+  version bump, Play icon, trailer pipeline, checklist, privacy/terms.
+  Intended PR to `main`. Do not merge without Yishai's review. Do not
+  force-push, and do not touch `main` directly. PR #35 (`release/v1.17`) is
+  superseded by this branch.
 - Other historical branches (`docs/handoff`, `release/v1.16`, feature and fix
   branches) are already merged or idle; do not treat them as the work tree.
 
 ## 30-day goal
 
-Ready-to-publish Play package by **2026-11-28**. That means a signed VC17 AAB
-that passes the strict store-gate, listing assets, Data safety / content
+Ready-to-publish Play package by **2026-11-28**. That means a signed **VC18**
+AAB that passes the strict store-gate, listing assets, Data safety / content
 rating material, and a closed-testing plan — sitting ready, not uploaded to
-production. A 30-second gameplay trailer is **pending** (the listing will need
-a YouTube URL). Publishing to any Play track still needs Yishai's explicit OK.
+production. A 30-second gameplay trailer pipeline exists (v2 take in
+`/workspace/scorched-trailer/v2/`; videos are not in git). Publishing to any
+Play track still needs Yishai's explicit OK.
 The business model is already in `marketing/COPY.md`: free in the browser and
 via the GitHub/APK sideload; a one-time paid download on Google Play.
 
 ## In progress / next steps
 
-1. Land the v1.17 PR (docs + version bump + icon only). Leave `apk/ScorchedTanks.apk` at VC16.
-2. Keep PR #34 unmerged until it is reviewed on its own; use its Data safety
-   answers when filling the Play form.
+1. Review and land the v1.18 PR (age gate, parent PIN, safety reminder, version
+   bump). Leave `apk/ScorchedTanks.apk` at VC16. Do not merge without Yishai.
+2. Use `docs/store/privacy-terms.md` when filling the Play Data safety form.
+   Confirm the Play content rating / Families target now that under-13 can
+   play offline with parent controls.
 3. When Yishai is ready to sign: request the existing keystore via a secret
    request in this project's chat (environment variable names only:
    `SCORCHED_KEYSTORE`, `SCORCHED_KEYSTORE_PASSWORD`, optional
    `SCORCHED_KEY_ALIAS` / `SCORCHED_KEY_PASSWORD`). Build `bundleRelease`,
    verify the signer SHA-256 against the pinned production fingerprint, and
-   run store-gate with `release: true`. Do not generate a new key.
+   run store-gate with `release: true`. Do not generate a new key. The next
+   Play upload must be versionCode 18.
 4. Yishai still needs to confirm Play Console account status, payments /
    merchant setup, and the paid-download price. Do not invent a price.
-5. Trailer, real-device listing screenshots (shop, lobby, map builder), closed
-   testing track. See the checklist.
-6. Do not deploy the Worker or replace the sideload APK until a signed VC17
+5. Trailer v2 is recorded (generic names, human winner). Real-device listing
+   screenshots and the closed-testing track remain. See the checklist.
+6. Do not deploy the Worker or replace the sideload APK until a signed VC18
    artifact exists and a deploy is explicitly requested.
 
 ## Known issues and cautions
@@ -94,7 +118,7 @@ via the GitHub/APK sideload; a one-time paid download on Google Play.
   consecutive days before production access. **Unverified** against current
   Play policy; confirm on the account.
 - `deploy.sh --dry-run` will fail the APK versionName check once `aapt` is
-  present, because `APP_VER` is 1.17 and the committed APK is still 1.16.
+  present, because `APP_VER` is 1.18 and the committed APK is still 1.16.
   That is expected. CI's `shell-tests` job does not install `aapt`, so the
   check is skipped there.
 - Keystore material, passwords, Cloudflare tokens and private backups must

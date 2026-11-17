@@ -15,6 +15,7 @@ test("loads with no console errors, title → menu, version tag", async ({ page 
 test("without ?test=1 the test hook does not exist", async ({ page }) => {
   await page.goto("/index.html");
   await page.locator("#title").click();
+  if (await page.locator("#ageGate").isVisible()) await page.locator("#ageAdult").click();
   await expect(page.locator("#menu")).toBeVisible();
   expect(await page.evaluate(() => typeof window.__ST_TEST__)).toBe("undefined");
   expect(await page.evaluate(() => "__ST_TEST__" in window)).toBe(false);

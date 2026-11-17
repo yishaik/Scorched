@@ -4,7 +4,7 @@ Last updated: November 2026
 
 Scorched Tanks is made by Yishai Kaminsky, Tel Aviv, Israel ("I"). This policy covers the Android app (com.yishai.scorchedtanks) and the browser version at tanks.yishaik.com.
 
-**What stays on your device.** Settings, saved games and the maps you draw are stored only on your device. I never receive them unless you host an online game.
+**What stays on your device.** Settings, saved games, the maps you draw, the age group you pick, a parent PIN (stored as a one-way hash) and parent-control choices are stored only on your device. I never receive them, and they are not sent when you play online.
 
 **Online play.** When you play online, the game connects to a server on Cloudflare that relays moves between players. It handles:
 - the nickname you type (shown to other players in the room),
@@ -14,7 +14,7 @@ Scorched Tanks is made by Yishai Kaminsky, Tel Aviv, Israel ("I"). This policy c
 
 **What I don't do.** No accounts, no ads, no analytics, no tracking, no location, contacts, camera or microphone. Nothing is sold or shared with anyone, except Cloudflare, which runs the server for me, and Google Play, which handles purchases under Google's own privacy policy.
 
-**Children.** The game isn't aimed at children under 13, and I don't knowingly collect data from them. Nicknames are the only text players share.
+**Children.** On first launch the game asks for an age group (under 13, 13–17, or 18+). That answer stays on the device. For the under-13 group, online play is off until a parent turns it on with the parent PIN. A safety reminder is shown before any online play. I do not collect the age group, the PIN, or parent-control settings. Nicknames are the only text players share online.
 
 **Your choices.** Offline play sends nothing. To delete local data, clear the app's storage or uninstall. For questions or deletion requests about online play, write to theyishaik@gmail.com.
 

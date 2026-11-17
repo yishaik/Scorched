@@ -12,7 +12,7 @@ The turn-based tank artillery classic, rebuilt for your phone and your browser. 
 [![Download APK](https://img.shields.io/badge/Android-Download_APK-3ddc84?style=for-the-badge&logo=android&logoColor=white)](https://tanks.yishaik.com/download)
 [![Google Play](https://img.shields.io/badge/Google_Play-coming_soon-414141?style=for-the-badge&logo=googleplay&logoColor=white)](#support-the-game)
 
-![version](https://img.shields.io/badge/version-1.17-blue) ![platform](https://img.shields.io/badge/platform-Android%20%7C%20Web-informational) ![no ads](https://img.shields.io/badge/ads-none-success) [![license](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE) ![no account](https://img.shields.io/badge/account-not%20needed-success)
+![version](https://img.shields.io/badge/version-1.18-blue) ![platform](https://img.shields.io/badge/platform-Android%20%7C%20Web-informational) ![no ads](https://img.shields.io/badge/ads-none-success) [![license](https://img.shields.io/badge/license-GPL--3.0-blue)](LICENSE) ![no account](https://img.shields.io/badge/account-not%20needed-success)
 
 </div>
 
